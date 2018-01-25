@@ -107,7 +107,7 @@ void twi_setClockStretchLimit(uint32_t limit)
 
 /**************************************************************************/
 /*
-    twi_delay
+    twi_delay, in usec
 */
 /**************************************************************************/
 static void twi_delay(uint8_t value)
@@ -207,7 +207,7 @@ void twi_init(uint8_t sda, uint8_t scl)
   delay(20);                     //some slave needs >= 15msec to reach the idle state
 
   twi_setClock(100000UL);        //~100KHz
-  twi_setClockStretchLimit(230); //stretch SCL limit
+  twi_setClockStretchLimit(230); //stretch SCL limit, in usec
 
   freeBus();                     //dirty hack to release locked SDA line
 }
