@@ -49,7 +49,7 @@ extern "C"
 {
 #endif
 
-#define I2C_SDA_POLLING_LIMIT       30    //qnt of tries to release I2C bus if slave locked SDA low
+#define I2C_SDA_POLLING_LIMIT       20    //qnt of tries to release I2C bus if slave locked SDA low
 
 #define I2C_NACK                    HIGH  //1
 #define I2C_ACK                     LOW   //0
