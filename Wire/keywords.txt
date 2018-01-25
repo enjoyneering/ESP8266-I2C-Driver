@@ -3,32 +3,32 @@
 #######################################
 
 #######################################
-# Datatypes             (KEYWORD1)
+# Datatypes		(KEYWORD1)
 #######################################
 
 #######################################
-# Methods and Functions (KEYWORD2)
+# Methods and Functions	(KEYWORD2)
 #######################################
 
-begin                    KEYWORD2
-setClock                 KEYWORD2
-setClockStretchLimit     KEYWORD2
-beginTransmission        KEYWORD2
-write                    KEYWORD2
-endTransmission	         KEYWORD2
-requestFrom              KEYWORD2
-available                KEYWORD2
-read                     KEYWORD2
-peek                     KEYWORD2
-flush                    KEYWORD2
-status                   KEYWORD2
-onReceive                KEYWORD2
-onRequest                KEYWORD2
+beginTransmission	KEYWORD2
+setClock		KEYWORD2
+setClockStretchLimit	KEYWORD2
+beginTransmission	KEYWORD2
+write			KEYWORD2
+endTransmission		KEYWORD2
+requestFrom		KEYWORD2
+available		KEYWORD2
+read			KEYWORD2
+peek			KEYWORD2
+flush			KEYWORD2
+status			KEYWORD2
+onReceive		KEYWORD2
+onRequest		KEYWORD2
 
 #######################################
 # Instances             (KEYWORD2)
 #######################################
-Wire                     KEYWORD2
+Wire			KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
