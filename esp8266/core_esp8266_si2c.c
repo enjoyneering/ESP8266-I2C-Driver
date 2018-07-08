@@ -117,7 +117,7 @@ static void twi_delay(uint8_t value)
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
-  for(uint8_t i = 0; i < value; i++) reg = GPI;
+  for (uint8_t i = 0; i < value; i++) reg = GPI;
 
   #pragma GCC diagnostic pop
 }
