@@ -117,10 +117,8 @@ static void twi_delay(uint8_t value)
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
-  for(uint8_t i = 0; i < value; i++)
-  {
-    reg = GPI;
-  }
+  for(uint8_t i = 0; i < value; i++) reg = GPI;
+
   #pragma GCC diagnostic pop
 }
 
@@ -142,10 +140,9 @@ static bool clockStretch(void)
   /* SCL is low, slave needs more time */
   while (SCL_READ() == LOW)
   {
-    pollCounter--;
-    if (pollCounter < 0) return false; //error handler, ERROR - SCL locked!!!
+    if (pollCounter-- < 0) return false; //error handler, ERROR - SCL locked!!!
   }
-  return true;                         //SCL released!!!
+  return true;                           //SCL released!!!
 }
 
 /**************************************************************************/
@@ -168,8 +165,7 @@ static bool freeBus(void)
   /* SDA is low, I2C bus is locked */
   while (SDA_READ() == LOW)
   {
-    pollCounter--;
-    if (pollCounter < 0) return false;        //error handler, ERROR - SDA busy!!!
+    if (pollCounter-- < 0) return false;      //error handler, ERROR - SDA busy!!!
 
     SCL_LOW();                                //becomes output & pulls the line low
     twi_delay(twi_dcount - 6);                //tLOW >= 4.7usec, LOW period of the SCL (real time 4.875usec)
@@ -306,6 +302,7 @@ static bool twi_write_bit(bool txBit)
     case HIGH:
       SDA_HIGH();                                    //becomes input has pullup & pulls the line high
       break;
+
     case LOW:
       SDA_LOW();                                     //becomes output & pulls the line low
       break;
@@ -367,6 +364,7 @@ static uint8_t twi_read_bit(void)
     case HIGH:
       SDA_HIGH();     
       break;
+
     case LOW:
       SDA_LOW();       
       break;
@@ -430,14 +428,20 @@ static uint8_t twi_read_byte(bool ack_nack)
   {
     rxBit = twi_read_bit();
 
-    if (rxBit == HIGH || rxBit == LOW)
+    switch (rxBit)
     {
-      rxByte = (rxByte << 1) | rxBit;
-    }
-    else
-    {
-      collision = true;                  //SCL busy!!!
-      return 0;
+      case HIGH:
+        rxByte = (rxByte << 1) | rxBit;
+        break;
+
+      case LOW:
+        rxByte = rxByte << 1;
+        break;
+
+      case I2C_SCL_HELD_LOW:
+        collision = true;                //SCL busy!!!
+        return 0;
+        break;
     }
   }
 
@@ -557,6 +561,7 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
       buffer[(length - 1)] = twi_read_byte(I2C_NACK);   //always sends NACK before stop
       twi_write_stop();
       break;
+
     case LOW:
       buffer[(length - 1)] = twi_read_byte(I2C_ACK);    //sends ACK, for "repeated START"
       break;
