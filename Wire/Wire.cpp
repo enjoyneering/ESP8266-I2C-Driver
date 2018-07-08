@@ -203,10 +203,8 @@ size_t TwoWire::write(uint8_t data)
     _txBufferIndex++;
     _txBufferLength = _txBufferIndex;
   }
-  else
-  {
-    return 0;
-  }
+  else return 0;
+
   return 1;
 }
 
@@ -222,10 +220,7 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 {
   for(size_t i = 0; i < quantity; i++)
   {
-    if (write(buffer[i]) != 1)          //put the byte from array into the tx buffer
-    {
-      return i;
-    }
+    if (write(buffer[i]) != 1) return i; //put the byte from array into the tx buffer
   }
   return quantity;
 }
@@ -343,10 +338,8 @@ int TwoWire::available(void)
      yield will not make more data available but it will prevent the esp8266
      from going into WDT reset during the "while()"
   */
-  if (result == 0)
-  {
-    optimistic_yield(1000);
-  }
+  if (result == 0) optimistic_yield(1000);
+
   return result;
 }
 
@@ -382,10 +375,8 @@ int TwoWire::peek(void)
 {
   int value = 0;
 
-  if (_rxBufferIndex < _rxBufferLength)
-  {
-    value = _rxBuffer[_rxBufferIndex];
-  }
+  if (_rxBufferIndex < _rxBufferLength) value = _rxBuffer[_rxBufferIndex];
+
   return value;
 }
 
