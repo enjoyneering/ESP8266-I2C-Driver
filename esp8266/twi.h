@@ -42,6 +42,7 @@
 
 #ifndef SI2C_h
 #define SI2C_h
+
 #include "Arduino.h"
 
 #ifdef __cplusplus
