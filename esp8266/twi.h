@@ -8,8 +8,8 @@
   are required to interface. Connect slave to pins:
 
   Board:                                     SDA        SCL        Level
-  ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
   ESP8266................................... GPIO4      GPIO5      3.3v/5v
+  ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
   NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
 
   NOTE:
