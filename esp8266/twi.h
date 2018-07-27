@@ -4,16 +4,16 @@
 
   Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
 
-  This library is software bitbang emulation of Master I2C bus protocol, specials pins
-  are required to interface.
+  This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
+  are required to interface. Connect slave to pins:
 
-  Connect slave to pins:    SDA        SCL
-  ESP8266 ESP-01:           GPIO0/D5   GPIO2/D3
-  NodeMCU 1.0:              GPIO4/D2   GPIO5/D1
-  WeMos D1 Mini:            GPIO4/D2   GPIO5/D1
+  Board:                                     SDA        SCL        Level
+  ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
+  ESP8266................................... GPIO4      GPIO5      3.3v/5v
+  NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
 
   NOTE:
-  - I2C bus drivers are “open drain”, meaning that they can pull the
+  - I2C bus drivers are "open drain", meaning that they can pull the
     corresponding signal line low, but cannot drive it high. Thus, there can
     be no bus contention where one device is trying to drive the line high
     while another tries to pull it low, eliminating the potential for damage
