@@ -81,21 +81,21 @@ void twi_setClock(uint32_t freq)
   preferred_si2c_clock = freq;
 
   #if F_CPU == FCPU80
-  if      (freq <= 50000UL)  twi_dcount = 38; //~50KHz
-  else if (freq <= 100000UL) twi_dcount = 19; //~100KHz
-  else if (freq <= 200000UL) twi_dcount = 8;  //~200KHz
-  else if (freq <= 300000UL) twi_dcount = 3;  //~300KHz
-  else if (freq <= 400000UL) twi_dcount = 1;  //~400KHz
-  else                       twi_dcount = 1;  //~400KHz
+  if      (freq <= 50000)  twi_dcount = 38; //~50KHz
+  else if (freq <= 100000) twi_dcount = 19; //~100KHz
+  else if (freq <= 200000) twi_dcount = 8;  //~200KHz
+  else if (freq <= 300000) twi_dcount = 3;  //~300KHz
+  else if (freq <= 400000) twi_dcount = 1;  //~400KHz
+  else                     twi_dcount = 1;  //~400KHz
   #else
-  if      (freq <= 50000)    twi_dcount = 64; //~50KHz
-  else if (freq <= 100000UL) twi_dcount = 32; //~100KHz
-  else if (freq <= 200000UL) twi_dcount = 14; //~200KHz
-  else if (freq <= 300000UL) twi_dcount = 8;  //~300KHz
-  else if (freq <= 400000UL) twi_dcount = 5;  //~400KHz
-  else if (freq <= 500000UL) twi_dcount = 3;  //~500KHz
-  else if (freq <= 600000UL) twi_dcount = 2;  //~600KHz
-  else                       twi_dcount = 1;  //~700KHz
+  if      (freq <= 50000)  twi_dcount = 64; //~50KHz
+  else if (freq <= 100000) twi_dcount = 32; //~100KHz
+  else if (freq <= 200000) twi_dcount = 14; //~200KHz
+  else if (freq <= 300000) twi_dcount = 8;  //~300KHz
+  else if (freq <= 400000) twi_dcount = 5;  //~400KHz
+  else if (freq <= 500000) twi_dcount = 3;  //~500KHz
+  else if (freq <= 600000) twi_dcount = 2;  //~600KHz
+  else                     twi_dcount = 1;  //~700KHz
   #endif
 }
 
