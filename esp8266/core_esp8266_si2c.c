@@ -65,7 +65,7 @@ static   uint8_t  twi_sda               = 0;      //ESP8266 ESP-01: GPIO0/D5, No
 static   uint8_t  twi_scl               = 0;      //ESP8266 ESP-01: GPIO2/D3, NodeMCU 1.0 & WeMos D1 Mini: GPIO5/D1
 static   uint32_t twi_clockStretchLimit = 0;
          uint8_t  twi_dcount            = 0;
-         uint32_t preferred_si2c_clock  = 100000; //default i2s speed 100kHz
+         uint32_t preferred_si2c_clock  = 100000; //default i2c speed 100kHz
 
 static   bool     collision             = false;  //shows if bit was successfuly read from slave
 
@@ -118,10 +118,10 @@ void twi_setClockStretchLimit(uint32_t limit)
 /**************************************************************************/
 static void twi_delay(uint8_t value)
 {
-  uint16_t reg = 0;
-
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
+  uint16_t reg = 0;
 
   for (uint8_t i = 0; i < value; i++) reg = GPI;
 
@@ -600,6 +600,5 @@ uint8_t twi_status()
   if (twi_write_stop()  != I2C_OK) return I2C_SCL_HELD_LOW_AFTER_READ;
   if (SDA_READ() == LOW)           return I2C_SDA_HELD_LOW;
   if (SCL_READ() == LOW)           return I2C_SCL_HELD_LOW; 
-
-  return I2C_OK;                                                       //OK!!!
+                                   return I2C_OK;                      //OK!!!
 }
