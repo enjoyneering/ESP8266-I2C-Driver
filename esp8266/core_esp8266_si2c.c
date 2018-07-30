@@ -54,18 +54,20 @@
 #define TWI_CLOCK_STRETCH_MULTIPLIER 6
 #endif
 
-#define SDA_LOW()  (GPES = (1 << twi_sda))       //enable  SDA (becomes output & since GPO is 0 for the pin, it will pull the line low)
-#define SDA_HIGH() (GPEC = (1 << twi_sda))       //disable SDA (becomes input  & since it has pullup it will go high)
+#define SDA_LOW()  (GPES = (1 << twi_sda))        //enable  SDA (becomes output & since GPO is 0 for the pin, it will pull the line low)
+#define SDA_HIGH() (GPEC = (1 << twi_sda))        //disable SDA (becomes input  & since it has pullup it will go high)
 #define SDA_READ() ((GPI & (1 << twi_sda)) != 0)
 #define SCL_LOW()  (GPES = (1 << twi_scl))
 #define SCL_HIGH() (GPEC = (1 << twi_scl))
 #define SCL_READ() ((GPI & (1 << twi_scl)) != 0)
 
-static uint8_t  twi_sda               = 0;       //ESP8266 ESP-01: GPIO0/D5, NodeMCU 1.0 & WeMos D1 Mini: GPIO4/D2
-static uint8_t  twi_scl               = 0;       //ESP8266 ESP-01: GPIO2/D3, NodeMCU 1.0 & WeMos D1 Mini: GPIO5/D1
-static uint32_t twi_clockStretchLimit = 0;
-static bool     collision             = false;   //shows if bit was successfuly read from slave
-       uint8_t  twi_dcount            = 0;
+static   uint8_t  twi_sda               = 0;      //ESP8266 ESP-01: GPIO0/D5, NodeMCU 1.0 & WeMos D1 Mini: GPIO4/D2
+static   uint8_t  twi_scl               = 0;      //ESP8266 ESP-01: GPIO2/D3, NodeMCU 1.0 & WeMos D1 Mini: GPIO5/D1
+static   uint32_t twi_clockStretchLimit = 0;
+         uint8_t  twi_dcount            = 0;
+         uint32_t preferred_si2c_clock  = 100000; //default i2s speed 100kHz
+
+static   bool     collision             = false;  //shows if bit was successfuly read from slave
 
 /**************************************************************************/
 /*
@@ -76,20 +78,24 @@ static bool     collision             = false;   //shows if bit was successfuly 
 /**************************************************************************/
 void twi_setClock(uint32_t freq)
 {
+  preferred_si2c_clock = freq;
+
   #if F_CPU == FCPU80
-  if     (freq <= 100000UL) twi_dcount = 19; //~100KHz
-  else if(freq <= 200000UL) twi_dcount = 8;  //~200KHz
-  else if(freq <= 300000UL) twi_dcount = 3;  //~300KHz
-  else if(freq <= 400000UL) twi_dcount = 1;  //~400KHz
-  else                      twi_dcount = 1;  //~400KHz
+  if      (freq <= 50000UL)  twi_dcount = 38; //~50KHz
+  else if (freq <= 100000UL) twi_dcount = 19; //~100KHz
+  else if (freq <= 200000UL) twi_dcount = 8;  //~200KHz
+  else if (freq <= 300000UL) twi_dcount = 3;  //~300KHz
+  else if (freq <= 400000UL) twi_dcount = 1;  //~400KHz
+  else                       twi_dcount = 1;  //~400KHz
   #else
-  if     (freq <= 100000UL) twi_dcount = 32; //~100KHz
-  else if(freq <= 200000UL) twi_dcount = 14; //~200KHz
-  else if(freq <= 300000UL) twi_dcount = 8;  //~300KHz
-  else if(freq <= 400000UL) twi_dcount = 5;  //~400KHz
-  else if(freq <= 500000UL) twi_dcount = 3;  //~500KHz
-  else if(freq <= 600000UL) twi_dcount = 2;  //~600KHz
-  else                      twi_dcount = 1;  //~700KHz
+  if      (freq <= 50000)    twi_dcount = 64; //~50KHz
+  else if (freq <= 100000UL) twi_dcount = 32; //~100KHz
+  else if (freq <= 200000UL) twi_dcount = 14; //~200KHz
+  else if (freq <= 300000UL) twi_dcount = 8;  //~300KHz
+  else if (freq <= 400000UL) twi_dcount = 5;  //~400KHz
+  else if (freq <= 500000UL) twi_dcount = 3;  //~500KHz
+  else if (freq <= 600000UL) twi_dcount = 2;  //~600KHz
+  else                       twi_dcount = 1;  //~700KHz
   #endif
 }
 
@@ -198,14 +204,14 @@ void twi_init(uint8_t sda, uint8_t scl)
   twi_sda = sda;
   twi_scl = scl;
 
-  SCL_HIGH();                    //becomes input has pullup & pulls the line high
-  SDA_HIGH();                    //becomes input has pullup & pulls the line high
-  delay(20);                     //some slave needs >= 15msec to reach the idle state
+  SCL_HIGH();                         //becomes input has pullup & pulls the line high
+  SDA_HIGH();                         //becomes input has pullup & pulls the line high
+  delay(20);                          //some slave needs >= 15msec to reach the idle state
 
-  twi_setClock(100000UL);        //~100KHz
-  twi_setClockStretchLimit(230); //stretch SCL limit, in usec
+  twi_setClock(preferred_si2c_clock); //~100KHz, by default
+  twi_setClockStretchLimit(230);      //stretch SCL limit, in usec
 
-  freeBus();                     //dirty hack to release locked SDA line
+  freeBus();                          //dirty hack to release locked SDA line
 }
 
 /**************************************************************************/
