@@ -54,15 +54,15 @@
 #define TWI_CLOCK_STRETCH_MULTIPLIER 6
 #endif
 
-#define SDA_LOW()  (GPES = (1 << twi_sda))        //enable  SDA (becomes output & since GPO is 0 for the pin, it will pull the line low)
-#define SDA_HIGH() (GPEC = (1 << twi_sda))        //disable SDA (becomes input  & since it has pullup it will go high)
+#define SDA_LOW()  (GPES = (1 << twi_sda))        //enable  SDA (becomes OUTPUT       & since GPO is 0 for the pin, it will pull the line low)
+#define SDA_HIGH() (GPEC = (1 << twi_sda))        //disable SDA (becomes INPUT_PULLUP & since it has 30kOhm..100kOhm pullup it will go high)
 #define SDA_READ() ((GPI & (1 << twi_sda)) != 0)
 #define SCL_LOW()  (GPES = (1 << twi_scl))
 #define SCL_HIGH() (GPEC = (1 << twi_scl))
 #define SCL_READ() ((GPI & (1 << twi_scl)) != 0)
 
-static   uint8_t  twi_sda               = 0;      //ESP8266 ESP-01: GPIO0/D5, NodeMCU 1.0 & WeMos D1 Mini: GPIO4/D2
-static   uint8_t  twi_scl               = 0;      //ESP8266 ESP-01: GPIO2/D3, NodeMCU 1.0 & WeMos D1 Mini: GPIO5/D1
+static   uint8_t  twi_sda               = 0;      //sda pin
+static   uint8_t  twi_scl               = 0;      //scl pin
 static   uint32_t twi_clockStretchLimit = 0;
          uint8_t  twi_dcount            = 0;
          uint32_t preferred_si2c_clock  = 100000; //default i2c speed 100kHz
