@@ -46,7 +46,9 @@
 #include <inttypes.h>
 #include "Stream.h"
 
-#define TWI_I2C_BUFFER_LENGTH 32 //32-bytes rx buffer + 32-bytes tx buffer = 64-bytes total
+#ifndef TWI_I2C_BUFFER_LENGTH
+#define TWI_I2C_BUFFER_LENGTH 32 //32-bytes rx buffer + 32-bytes tx buffer, 64-bytes total
+#endif
 
 class TwoWire : public Stream
 {
@@ -64,10 +66,10 @@ class TwoWire : public Stream
 
     virtual size_t  write(uint8_t data);
     virtual size_t  write(const uint8_t *buffer, size_t quantity);
-    inline  size_t  write(unsigned long data) {return write((uint8_t)data);}
-    inline  size_t  write(long data)          {return write((uint8_t)data);}
-    inline  size_t  write(unsigned int data)  {return write((uint8_t)data);}
     inline  size_t  write(int data)           {return write((uint8_t)data);}
+    inline  size_t  write(unsigned int data)  {return write((uint8_t)data);}
+    inline  size_t  write(long data)          {return write((uint8_t)data);}
+    inline  size_t  write(unsigned long data) {return write((uint8_t)data);}
             using   Print::write;
 
             uint8_t endTransmission(bool sendStop);
@@ -98,7 +100,7 @@ class TwoWire : public Stream
     static uint8_t _txAddress;
     static uint8_t _txBufferIndex;
     static uint8_t _txBufferLength;
-    static bool    _transmitting;   //ready to transmit flag, true when address is setted up
+    static bool    _transmitting;   //ready to transmit flag, true when address is set up
 
            void flushRX(void);
            void flushTX(void);
