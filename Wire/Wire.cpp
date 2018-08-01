@@ -47,8 +47,19 @@ extern "C"
   #include <inttypes.h>
 }
 
-#include "twi.h"   //i2c software bitbang emulation
+#include "twi.h"   //i2c software bit-bang emulation
 #include "Wire.h"  //arduino wrapper
+
+
+/**************************************************************************/
+/*
+    Some boards don't have these pins available, and hence don't
+    support Wire. Check here for compile-time error.
+*/
+/**************************************************************************/
+#if !defined(PIN_WIRE_SDA) || !defined(PIN_WIRE_SCL)
+#error Wire library is not supported on this board
+#endif
 
 /**************************************************************************/
 /*
@@ -123,8 +134,8 @@ void TwoWire::begin(uint8_t sda, uint8_t scl)
 /*
     begin(), public method
 
-    Sets bus speed, clock strech limit & sets DEFAULT pins to open drain
-    & switch them to high state
+    Sets bus speed, clock strech limit, SDA & SCL to INPUT_PULLUP & pulls
+    lines high
 */
 /**************************************************************************/
 void TwoWire::begin(void)
@@ -136,12 +147,12 @@ void TwoWire::begin(void)
 /*
     setClock(), public method
 
-    Sets I2C speed in Hz
+    Sets i2c speed, in Hz
 
     NOTE:
-    - speed @ 80Mhz  CPU: 100kHz..400KHz with 100kHz step
-    - speed @ 160Mhz CPU: 100kHz..700KHz with 100kHz step
-    - 100KHz by default, real ~111kHz @ 80Mhz CPU
+    - speed @ 80Mhz  CPU: 50kHz..400KHz with 100kHz step
+    - speed @ 160Mhz CPU: 50kHz..700KHz with 100kHz step
+    - 100KHz by default, but real speed ~111kHz @ 80Mhz CPU
 */
 /**************************************************************************/
 void TwoWire::setClock(uint32_t frequency)
@@ -153,7 +164,10 @@ void TwoWire::setClock(uint32_t frequency)
 /*
     setClockStretchLimit(), public method
 
-    Sets SCL stretch limit, 230 by default 
+    Sets SCL stretch limit, in μsec
+
+    NOTE:
+    - 230 μsec by default 
 */
 /**************************************************************************/
 void TwoWire::setClockStretchLimit(uint32_t limit)
@@ -368,7 +382,7 @@ int TwoWire::read(void)
     peek(), public method
 
     Returns the value of last received byte without removing it
-    from rx buffer.
+    from rx buffer
 */
 /**************************************************************************/
 int TwoWire::peek(void)
