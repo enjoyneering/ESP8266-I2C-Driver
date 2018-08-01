@@ -113,7 +113,7 @@ void twi_setClockStretchLimit(uint32_t limit)
 
 /**************************************************************************/
 /*
-    twi_delay, in usec
+    twi_delay
 */
 /**************************************************************************/
 static void twi_delay(uint8_t value)
@@ -148,6 +148,7 @@ static bool clockStretch(void)
   {
     if (pollCounter-- < 0) return false; //error handler, ERROR - SCL locked!!!
   }
+  
   return true;                           //SCL released!!!
 }
 
@@ -166,7 +167,7 @@ static bool clockStretch(void)
 /**************************************************************************/
 static bool freeBus(void)
 {
-  int8_t pollCounter = I2C_SDA_POLLING_LIMIT;
+  int8_t pollCounter = TWI_I2C_SDA_POLLING_LIMIT;
 
   /* SDA is low, I2C bus is locked */
   while (SDA_READ() == LOW)
@@ -174,12 +175,13 @@ static bool freeBus(void)
     if (pollCounter-- < 0) return false;      //error handler, ERROR - SDA busy!!!
 
     SCL_LOW();                                //becomes output & pulls the line low
-    twi_delay(twi_dcount - 6);                //tLOW >= 4.7usec, LOW period of the SCL (real time 4.875usec)
+    twi_delay(twi_dcount - 6);                //tLOW >= 4.7μsec, LOW period of the SCL (real time 4.875μsec)
 
     SCL_HIGH();                               //release the SCL bus, so we can read a bit or ack/nack answer from slave
     if (clockStretch() != true) return false; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-    twi_delay(twi_dcount - 5);                //tHIGH = 4.0usec, HIGH period of the SCL (real time - 4.125usec)
+    twi_delay(twi_dcount - 5);                //tHIGH = 4.0μsec, HIGH period of the SCL (real time - 4.125μsec)
   }
+  
   return true;                                //SDA released!!!
 }
 
@@ -204,12 +206,12 @@ void twi_init(uint8_t sda, uint8_t scl)
   twi_sda = sda;
   twi_scl = scl;
 
-  SCL_HIGH();                         //becomes input has pullup & pulls the line high
-  SDA_HIGH();                         //becomes input has pullup & pulls the line high
+  SCL_HIGH();                         //becomes INPUT_PULLUP & pulls the line high
+  SDA_HIGH();                         //becomes INPUT_PULLUP & pulls the line high
   delay(20);                          //some slave needs >= 15msec to reach the idle state
 
   twi_setClock(preferred_si2c_clock); //~100KHz, by default
-  twi_setClockStretchLimit(230);      //stretch SCL limit, in usec
+  twi_setClockStretchLimit(230);      //stretch SCL limit, in μsec
 
   freeBus();                          //dirty hack to release locked SDA line
 }
@@ -232,14 +234,14 @@ static bool twi_write_start(void)
   /* start SCL & SDA routine */
   SCL_HIGH();                            //becomes input has pullup & pulls the line high, SCL FIRST DO NOT TOUCH
   SDA_HIGH();                            //becomes input has pullup & pulls the line high
-  twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7usec, bus free time between STOP & START condition (real time - 5.25usec)
+  twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7μsec, bus free time between STOP & START condition (real time - 5.25μsec)
 
   /* check if SDA line is blocked */
   if (freeBus() != true) return ~I2C_OK; //dirty hack to release locked SDA line
 
   /* continue SCL & SDA routine */
   SDA_LOW();                             //becomes output & pulls the line low
-  twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0usec, START hold time (real time - 4.375usec)
+  twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0μsec, START hold time (real time - 4.375μsec)
   SCL_LOW();
 
   return I2C_OK;                         //success!!!
@@ -258,17 +260,17 @@ static bool twi_write_start(void)
     - see NXP UM10204 p.48 and p.50 for timing details
 */
 /**************************************************************************/
-static uint8_t twi_write_stop(void)
+static bool twi_write_stop(void)
 {
   /* start SCL & SDA routine */
   SCL_LOW();                                  //becomes output & pulls the line low, SCL FIRST DO NOT TOUCH
   SDA_LOW();                                  //becomes output & pulls the line low
-  twi_delay(twi_dcount - 3);                  //tLOW >= 4.7usec, LOW period of the SCL (real time - 5.125usec)
+  twi_delay(twi_dcount - 3);                  //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
 
   /* continue SCL routine */
   SCL_HIGH();                                 //release the SCL line, becomes input has pullup & pulls the line high
   if (clockStretch() != true) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-  twi_delay(twi_dcount - 4);                  //tSU;STO >= 4.0usec, set-up time for STOP condition (real time - 4.375usec)
+  twi_delay(twi_dcount - 4);                  //tSU;STO >= 4.0μsec, set-up time for STOP condition (real time - 4.375μsec)
 
   /*continue SDA routine */
   SDA_HIGH();                                 //finish the STOP by releasing SDA line
@@ -300,28 +302,28 @@ static bool twi_write_bit(bool txBit)
 {
   /* start SCL routine */
   SCL_LOW();
-  twi_delay(twi_dcount - 5);                         //tLOW >= 4.7usec, LOW period of the SCL (real time - 5.125usec)
+  twi_delay(twi_dcount - 5);                   //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
 
   /* start SDA routine, set the bit */
   switch (txBit)
   {
     case HIGH:
-      SDA_HIGH();                                    //becomes input has pullup & pulls the line high
+      SDA_HIGH();                              //becomes input has pullup & pulls the line high
       break;
 
     case LOW:
-      SDA_LOW();                                     //becomes output & pulls the line low
+      SDA_LOW();                               //becomes output & pulls the line low
       break;
   }
-  twi_delay(1);                                      //tSU;DAT >= 250nsec, data set-up time
+  twi_delay(1);                                //tSU;DAT >= 250μsec, data set-up time
 
   /* continue SCL routine, bit is valid for read */
-  SCL_HIGH();                                        //try to release the SCL line, becomes input has pullup & pulls the line high
-  if (clockStretch() == false) return ~I2C_OK;       //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-  twi_delay(twi_dcount - 4);                         //tHIGH >= 4.0usec, HIGH period of the SCL (real time - 4.375usec)
+  SCL_HIGH();                                  //try to release the SCL line, becomes input has pullup & pulls the line high
+  if (clockStretch() == false) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
+  twi_delay(twi_dcount - 4);                   //tHIGH >= 4.0μsec, HIGH period of the SCL (real time - 4.375μsec)
   SCL_LOW();
  
-  return I2C_OK;                                     //success!!!
+  return I2C_OK;                               //success!!!
 }
 
 /**************************************************************************/
@@ -355,7 +357,7 @@ static uint8_t twi_read_bit(void)
 
   /* start SCL & SDA routine */
   SCL_LOW();                                            //becomes output & pulls the line low
-  twi_delay(twi_dcount - 3);                            //tLOW >= 4.7usec, LOW period of the SCL (real time - 5.000usec)
+  twi_delay(twi_dcount - 3);                            //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.000μsec)
 
   /* continue SCL routine */
   SDA_HIGH();                                           //becomes input & release the SDA line, so slave can send bit or ack/nack answer
@@ -364,7 +366,7 @@ static uint8_t twi_read_bit(void)
 
   /* continue SDA routine, read the data */
   rxBit = SDA_READ();                                   //read 7..0 data bit or 8-th NACK/ACK = 1/0 bit, 9 bits in total
-  twi_delay(twi_dcount - 6);                            //tHIGH >= 4.0usec, HIGH period of the SCL (real time - 4.375usec)
+  twi_delay(twi_dcount - 6);                            //tHIGH >= 4.0μsec, HIGH period of the SCL (real time - 4.375μsec)
   switch (rxBit)                                        //during "twi_write_byte()" removes spike after reading 9-th NACK/ACK bit 
   {
     case HIGH:
@@ -400,12 +402,11 @@ static bool twi_write_byte(uint8_t txByte)
   /* write the byte, in order MSB->LSB (7..0 bit) */
   for (int8_t i = 7; i >= 0; i--)
   {
-    if (twi_write_bit(bitRead(txByte, i)) != I2C_OK) return I2C_NACK; //write the byte in order MSB->LSB (7..0 bit), ERROR - NACK!!!
+    if (twi_write_bit(bitRead(txByte, i)) != I2C_OK) return TWI_I2C_NACK; //write the byte in order MSB->LSB (7..0 bit), ERROR - NACK!!!
   }
 
-  if (twi_read_bit() == I2C_ACK) return I2C_ACK;                      //reads 9-th bit NACK/ACK
-
-  return I2C_NACK;
+  if (twi_read_bit() == TWI_I2C_ACK) return TWI_I2C_ACK;                  //reads 9-th bit NACK/ACK
+                                     return TWI_I2C_NACK;
 }
 
 /**************************************************************************/
@@ -491,35 +492,39 @@ static uint8_t twi_read_byte(bool ack_nack)
 /**************************************************************************/
 uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendStop)
 {
-  //noInterrupts();                            //preventing interrupts
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  noInterrupts();                                  //disable all interrupts
+  #endif
 
   /* send start */
-  if (twi_write_start() != I2C_OK) return 4;   //line is busy!!!
+  if (twi_write_start() != I2C_OK) return 4;       //line is busy!!!
 
 
   /* write address */
-  if (twi_write_byte(address << 1) != I2C_ACK) //write address = (address << 1 + 0)
+  if (twi_write_byte(address << 1) != TWI_I2C_ACK) //write address = (address << 1 + 0)
   {
-    twi_write_stop();                          //always use stop after "twi_write_start()"
-    return 2;                                  //received NACK during address transmission!!!
+    twi_write_stop();                              //always use stop after "twi_write_start()"
+    return 2;                                      //received NACK during address transmission!!!
   }
 
   /* write n bytes */
   for(uint8_t i = 0; i < length; i++)
   {
-    if (twi_write_byte(buffer[i]) != I2C_ACK)  //error handler
+    if (twi_write_byte(buffer[i]) != TWI_I2C_ACK)  //error handler
     {
-      twi_write_stop();                        //always use stop after "twi_write_start()"
-      return 3;                                //received NACK during data transmission!!!
+      twi_write_stop();                            //always use stop after "twi_write_start()"
+      return 3;                                    //received NACK during data transmission!!!
     }
   }
 
   /* send stop */
   if (sendStop == true) twi_write_stop();
 
-  //interrupts();
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  interrupts();                                    //re-enable all interrupts
+  #endif
 
-  return 0;                                    //success!!!
+  return 0;                                        //success!!!
 }
 
 /**************************************************************************/
@@ -529,57 +534,63 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendS
     Fills in rxBuffer & returns qnt of received bytes or 0 if bus error
 
     NOTE:
-    - default buffer 16 bytes, see Wire.h
+    - default buffer 32-bytes, see Wire.h
 */
 /**************************************************************************/
 uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool sendStop)
 {
-  //noInterrupts();                                     //preventing interrupts
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  noInterrupts();                                           //disable all interrupts
+  #endif
 
-  if (length <= 0) length = 1;                          //safety check
+  if (length <= 0) length = 1;                              //safety check
 
   /* send start */
-  if (twi_write_start() != I2C_OK) return 0;            //line is busy!!!
+  if (twi_write_start() != I2C_OK) return 0;                //line is busy!!!
 
 
   /* write address */
-  if (twi_write_byte((address << 1) | 0x01) != I2C_ACK) //read address = (address << 1 + 1)
+  if (twi_write_byte((address << 1) | 0x01) != TWI_I2C_ACK) //read address = (address << 1 + 1)
   {
-    twi_write_stop();                                   //always use stop after "twi_write_start()"
-    return 0;                                           //received NACK during address transmition!!!
+    twi_write_stop();                                       //always use stop after "twi_write_start()"
+    return 0;                                               //received NACK during address transmition!!!
   }
 
   /* reads n-bytes from slave, except last one */
   for (uint8_t i = 0; i < (length - 1); i++)
   {
-    buffer[i] = twi_read_byte(I2C_ACK);                 //sends ACK, asuming byte successfully received, slave can sent another one
-    if (collision == true)                              //error reading n-byte from slave
+    buffer[i] = twi_read_byte(TWI_I2C_ACK);                 //sends ACK, asuming byte successfully received, slave can sent another one
+    if (collision == true)                                  //error reading n-byte from slave
     {
-      twi_write_stop();                                 //always use stop after "twi_write_start()"
-      return i;                                         //return qnt of successfully reserved of bytes
+      twi_write_stop();                                     //always use stop after "twi_write_start()"
+      return i;                                             //return qnt of successfully reserved of bytes
     }
   }
 
   /* reads last byte */
-  switch (sendStop)                                     //"repeated START" conditions
+  switch (sendStop)                                         //"repeated START" conditions
   {
     case HIGH:
-      buffer[(length - 1)] = twi_read_byte(I2C_NACK);   //always sends NACK before stop
+      buffer[(length - 1)] = twi_read_byte(TWI_I2C_NACK);   //always sends NACK before stop
       twi_write_stop();
       break;
 
     case LOW:
-      buffer[(length - 1)] = twi_read_byte(I2C_ACK);    //sends ACK, for "repeated START"
+      buffer[(length - 1)] = twi_read_byte(TWI_I2C_ACK);    //sends ACK, for "repeated START"
       break;
   }
 
-  if (collision == true)                                //error reading "last byte" from slave
+  if (collision == true)                                    //error reading "last byte" from slave
   {
-    if (sendStop == LOW) twi_write_stop();              //always use stop after "twi_write_start()"
+    if (sendStop == LOW) twi_write_stop();                  //always use stop after "twi_write_start()"
     return 0;
   }
-  //interrupts();
-  return length;                                        //return qnt successfully reserved of bytes
+
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  interrupts();                                             //re-enable all interrupts
+  #endif
+
+  return length;                                            //return qnt successfully reserved of bytes
 }
 
 /**************************************************************************/
@@ -600,5 +611,5 @@ uint8_t twi_status()
   if (twi_write_stop()  != I2C_OK) return I2C_SCL_HELD_LOW_AFTER_READ;
   if (SDA_READ() == LOW)           return I2C_SDA_HELD_LOW;
   if (SCL_READ() == LOW)           return I2C_SCL_HELD_LOW; 
-                                   return I2C_OK;                      //OK!!!
+                                   return I2C_OK;
 }
