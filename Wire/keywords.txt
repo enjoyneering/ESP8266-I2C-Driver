@@ -34,3 +34,6 @@ Wire	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+TWI_I2C_BUFFER_LENGTH	LITERAL1
+TWI_I2C_DISABLE_INTERRUPTS	LITERAL1
