@@ -148,7 +148,7 @@ static bool clockStretch(void)
   {
     if (pollCounter-- < 0) return false; //error handler, ERROR - SCL locked!!!
   }
-  
+
   return true;                           //SCL released!!!
 }
 
@@ -174,14 +174,14 @@ static bool freeBus(void)
   {
     if (pollCounter-- < 0) return false;      //error handler, ERROR - SDA busy!!!
 
-    SCL_LOW();                                //becomes output & pulls the line low
+    SCL_LOW();                                //becomes OUTPUT & pulls line LOW
     twi_delay(twi_dcount - 6);                //tLOW >= 4.7μsec, LOW period of the SCL (real time 4.875μsec)
 
     SCL_HIGH();                               //release the SCL bus, so we can read a bit or ack/nack answer from slave
     if (clockStretch() != true) return false; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
     twi_delay(twi_dcount - 5);                //tHIGH = 4.0μsec, HIGH period of the SCL (real time - 4.125μsec)
   }
-  
+
   return true;                                //SDA released!!!
 }
 
@@ -206,8 +206,8 @@ void twi_init(uint8_t sda, uint8_t scl)
   twi_sda = sda;
   twi_scl = scl;
 
-  SCL_HIGH();                         //becomes INPUT_PULLUP & pulls the line high
-  SDA_HIGH();                         //becomes INPUT_PULLUP & pulls the line high
+  SCL_HIGH();                         //becomes INPUT_PULLUP & pulls line high
+  SDA_HIGH();                         //becomes INPUT_PULLUP & pulls line high
   delay(20);                          //some slave needs >= 15msec to reach the idle state
 
   twi_setClock(preferred_si2c_clock); //~100KHz, by default
@@ -232,15 +232,15 @@ void twi_init(uint8_t sda, uint8_t scl)
 static bool twi_write_start(void)
 {
   /* start SCL & SDA routine */
-  SCL_HIGH();                            //becomes INPUT_PULLUP & pulls the line high, SCL FIRST DO NOT TOUCH
-  SDA_HIGH();                            //becomes INPUT_PULLUP & pulls the line high
+  SCL_HIGH();                            //becomes INPUT_PULLUP & pulls line high, SCL FIRST DO NOT TOUCH
+  SDA_HIGH();                            //becomes INPUT_PULLUP & pulls line high
   twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7μsec, bus free time between STOP & START condition (real time - 5.25μsec)
 
   /* check if SDA line is blocked */
   if (freeBus() != true) return ~I2C_OK; //dirty hack to release locked SDA line
 
   /* continue SCL & SDA routine */
-  SDA_LOW();                             //becomes output & pulls the line low
+  SDA_LOW();                             //becomes OUTPUT & pulls line LOW
   twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0μsec, START hold time (real time - 4.375μsec)
   SCL_LOW();
 
@@ -268,7 +268,7 @@ static bool twi_write_stop(void)
   twi_delay(twi_dcount - 3);                  //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
 
   /* continue SCL routine */
-  SCL_HIGH();                                 //release the SCL line, becomes input has pullup & pulls the line high
+  SCL_HIGH();                                 //release the SCL line, becomes INPUT_PULLUP & pulls line high
   if (clockStretch() != true) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
   twi_delay(twi_dcount - 4);                  //tSU;STO >= 4.0μsec, set-up time for STOP condition (real time - 4.375μsec)
 
@@ -308,17 +308,17 @@ static bool twi_write_bit(bool txBit)
   switch (txBit)
   {
     case HIGH:
-      SDA_HIGH();                              //becomes input has pullup & pulls the line high
+      SDA_HIGH();                              //becomes INPUT_PULLUP & pulls line high
       break;
 
     case LOW:
-      SDA_LOW();                               //becomes output & pulls the line low
+      SDA_LOW();                               //becomes OUTPUT & pulls line LOW
       break;
   }
   twi_delay(1);                                //tSU;DAT >= 250μsec, data set-up time
 
   /* continue SCL routine, bit is valid for read */
-  SCL_HIGH();                                  //try to release the SCL line, becomes input has pullup & pulls the line high
+  SCL_HIGH();                                  //try to release the SCL line, becomes INPUT_PULLUP & pulls line high
   if (clockStretch() == false) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
   twi_delay(twi_dcount - 4);                   //tHIGH >= 4.0μsec, HIGH period of the SCL (real time - 4.375μsec)
   SCL_LOW();
@@ -356,12 +356,12 @@ static uint8_t twi_read_bit(void)
   bool rxBit = 0;
 
   /* start SCL & SDA routine */
-  SCL_LOW();                                            //becomes output & pulls the line low
+  SCL_LOW();                                            //becomes OUTPUT & pulls line LOW
   twi_delay(twi_dcount - 3);                            //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.000μsec)
 
   /* continue SCL routine */
-  SDA_HIGH();                                           //becomes input & release the SDA line, so slave can send bit or ack/nack answer
-  SCL_HIGH();                                           //release the SCL bus, so we can read a bit or ack/nack answer from slave
+  SDA_HIGH();                                           //release the SDA line, so slave can send bit or ack/nack answer
+  SCL_HIGH();                                           //release the SCL line, so we can read a bit or ack/nack answer from slave
   if (clockStretch() == false) return I2C_SCL_HELD_LOW; //returns 3
 
   /* continue SDA routine, read the data */
