@@ -232,8 +232,8 @@ void twi_init(uint8_t sda, uint8_t scl)
 static bool twi_write_start(void)
 {
   /* start SCL & SDA routine */
-  SCL_HIGH();                            //becomes input has pullup & pulls the line high, SCL FIRST DO NOT TOUCH
-  SDA_HIGH();                            //becomes input has pullup & pulls the line high
+  SCL_HIGH();                            //becomes INPUT_PULLUP & pulls the line high, SCL FIRST DO NOT TOUCH
+  SDA_HIGH();                            //becomes INPUT_PULLUP & pulls the line high
   twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7μsec, bus free time between STOP & START condition (real time - 5.25μsec)
 
   /* check if SDA line is blocked */
@@ -263,8 +263,8 @@ static bool twi_write_start(void)
 static bool twi_write_stop(void)
 {
   /* start SCL & SDA routine */
-  SCL_LOW();                                  //becomes output & pulls the line low, SCL FIRST DO NOT TOUCH
-  SDA_LOW();                                  //becomes output & pulls the line low
+  SCL_LOW();                                  //becomes OUTPUT & pulls line LOW, SCL FIRST DO NOT TOUCH
+  SDA_LOW();                                  //becomes OUTPUT & pulls line LOW
   twi_delay(twi_dcount - 3);                  //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
 
   /* continue SCL routine */
