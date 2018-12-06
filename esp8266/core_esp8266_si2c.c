@@ -1,44 +1,36 @@
 /**************************************************************************************/
 /*
-  si2c.c - Software I2C library for esp8266
+   si2c.h - Software I2C library for esp8266
 
-  Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
+   Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
 
-  This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
-  are required to interface. Connect slave to pins:
+   This library is software/bit-bang emulation of Master I²C bus protocol.
 
-  Board:                                     SDA        SCL        Level
-  ESP8266................................... GPIO4      GPIO5      3.3v/5v
-  ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
-  NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
+   Specials pins are required to interface.
+   Board:                                     SDA        SCL        Level
+   ESP8266................................... GPIO4      GPIO5      3.3v/5v
+   ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
+   NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
 
-  NOTE:
-  - I2C bus drivers are "open drain", meaning that they can pull the
-    corresponding signal line low, but cannot drive it high. Thus, there can
-    be no bus contention where one device is trying to drive the line high
-    while another tries to pull it low, eliminating the potential for damage
-    to the drivers or excessive power dissipation in the system. Each signal
-    line has a pull-up resistor on it, to restore the signal to high when no
-    device is asserting it low.
-
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the esp8266 core for Arduino environment.
+   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
+   This file is part of the esp8266 core for Arduino environment.
  
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  Lesser General Public License for more details.
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+   Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 /**************************************************************************************/
+
 
 #include "twi.h"
 #include "pins_arduino.h"
@@ -54,8 +46,8 @@
 #define TWI_CLOCK_STRETCH_MULTIPLIER 6
 #endif
 
-#define SDA_LOW()  (GPES = (1 << twi_sda))        //enable  SDA (becomes OUTPUT       & since GPO is 0 for the pin, it will pull the line low)
-#define SDA_HIGH() (GPEC = (1 << twi_sda))        //disable SDA (becomes INPUT_PULLUP & since it has 30kOhm..100kOhm pullup it will go high)
+#define SDA_LOW()  (GPES = (1 << twi_sda))        //enable  SDA, pins becomes OUTPUT       & since GPO is 0 for the pin it will pull line low
+#define SDA_HIGH() (GPEC = (1 << twi_sda))        //disable SDA, pins becomes INPUT_PULLUP & since it has 30kOhm..100kOhm pullup it will go high
 #define SDA_READ() ((GPI & (1 << twi_sda)) != 0)
 #define SCL_LOW()  (GPES = (1 << twi_scl))
 #define SCL_HIGH() (GPEC = (1 << twi_scl))
@@ -65,7 +57,7 @@ static   uint8_t  twi_sda               = 0;      //sda pin
 static   uint8_t  twi_scl               = 0;      //scl pin
 static   uint32_t twi_clockStretchLimit = 0;
          uint8_t  twi_dcount            = 0;
-         uint32_t preferred_si2c_clock  = 100000; //default i2c speed 100kHz
+         uint16_t preferred_si2c_clock  = 100000; //default I2C speed 100kHz
 
 static   bool     collision             = false;  //shows if bit was successfuly read from slave
 
@@ -73,7 +65,7 @@ static   bool     collision             = false;  //shows if bit was successfuly
 /*
     twi_setClock()
 
-    Sets i2c clock speed
+    Sets I2C clock speed
 */
 /**************************************************************************/
 void twi_setClock(uint32_t freq)
@@ -103,7 +95,7 @@ void twi_setClock(uint32_t freq)
 /*
     twi_setClockStretchLimit
 
-    Sets SCL max stretch time
+    Sets SCL maximum stretch time, in μs
 */
 /**************************************************************************/
 void twi_setClockStretchLimit(uint32_t limit)
@@ -136,7 +128,7 @@ static void twi_delay(uint8_t value)
 
     NOTE:
     - when slave can't keep-up with master it locks SCL line low, it's
-      a sign that slave needs more time.
+      a sign that slave needs more time
 */
 /**************************************************************************/
 static bool clockStretch(void)
@@ -159,9 +151,10 @@ static bool clockStretch(void)
     Dirty hack to release I2C bus if slave locked SDA low
 
     NOTE:
-    - if for some reason previouse reading from diff. slave is not done yet
-    - the first SCL should be 1 / (tLOW + tHIGH) = bus frequency, so
-      1 / (4.700 + 4.000) = 115kHz & real 1 / (4.875 + 4.125) = 111.111kHz
+    - if for some reason previouse reading from diff slave is not done yet
+    - bus frequency is equal to first SCL, 1 / (tLOW + tHIGH):
+      -- specification frequency: 1 / (4.700 + 4.000) = 114.943kHz
+      -- measured      frequency: 1 / (4.875 + 4.125) = 111.111kHz
     - see NXP UM10204 p.48 and p.50 for timing details
 */
 /**************************************************************************/
@@ -175,11 +168,11 @@ static bool freeBus(void)
     if (pollCounter-- < 0) return false;      //error handler, ERROR - SDA busy!!!
 
     SCL_LOW();                                //becomes OUTPUT & pulls line LOW
-    twi_delay(twi_dcount - 6);                //tLOW >= 4.7μsec, LOW period of the SCL (real time 4.875μsec)
+    twi_delay(twi_dcount - 6);                //tLOW >= 4.7μsec (measured 4.875μsec), LOW period of the SCL
 
     SCL_HIGH();                               //release the SCL bus, so we can read a bit or ack/nack answer from slave
     if (clockStretch() != true) return false; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-    twi_delay(twi_dcount - 5);                //tHIGH = 4.0μsec, HIGH period of the SCL (real time - 4.125μsec)
+    twi_delay(twi_dcount - 5);                //tHIGH = 4.0μsec (measured 4.125μsec), HIGH period of the SCL
   }
 
   return true;                                //SDA released!!!
@@ -189,16 +182,18 @@ static bool freeBus(void)
 /*
     twi_init
 
-    Initialisation of soft/bitbang master I2C bus protocol
+    Initialisation of software/bit-bang master I2C bus protocol
 
     NOTE:
-    - I2C bus drivers are “open drain”, meaning that they can pull the
+    - normaly I2C bus drivers are “open drain”, meaning that they can pull the
       corresponding signal line low, but cannot drive it high. Thus, there can
       be no bus contention where one device is trying to drive the line high
       while another tries to pull it low, eliminating the potential for damage
       to the drivers or excessive power dissipation in the system. Each signal
       line has a pull-up resistor on it, to restore the signal to high when no
-      device is asserting it low.
+      device is asserting it low
+    - however this driver used INPUT_PULLUP, because many people do not
+      know about I2C Bus Pullup Resistor
 */
 /**************************************************************************/
 void twi_init(uint8_t sda, uint8_t scl)
@@ -224,7 +219,7 @@ void twi_init(uint8_t sda, uint8_t scl)
 
     NOTE:
     - START conditions are always generated by the master
-    - the bus is considered to be busy after the START condition.
+    - bus is considered to be busy after the START condition
     - see TI SLVA704 fig.5 on p.4 for more details
     - see NXP UM10204 p.48 and p.50 for timing details
 */
@@ -234,14 +229,14 @@ static bool twi_write_start(void)
   /* start SCL & SDA routine */
   SCL_HIGH();                            //becomes INPUT_PULLUP & pulls line high, SCL FIRST DO NOT TOUCH
   SDA_HIGH();                            //becomes INPUT_PULLUP & pulls line high
-  twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7μsec, bus free time between STOP & START condition (real time - 5.25μsec)
+  twi_delay(twi_dcount - 14);            //tSU;STA & tBUF >= 4.7μsec (measured 5.25μsec), bus free time between STOP & START condition
 
   /* check if SDA line is blocked */
   if (freeBus() != true) return ~I2C_OK; //dirty hack to release locked SDA line
 
   /* continue SCL & SDA routine */
   SDA_LOW();                             //becomes OUTPUT & pulls line LOW
-  twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0μsec, START hold time (real time - 4.375μsec)
+  twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0μsec (measured 4.375μsec), START hold time
   SCL_LOW();
 
   return I2C_OK;                         //success!!!
@@ -265,12 +260,12 @@ static bool twi_write_stop(void)
   /* start SCL & SDA routine */
   SCL_LOW();                                  //becomes OUTPUT & pulls line LOW, SCL FIRST DO NOT TOUCH
   SDA_LOW();                                  //becomes OUTPUT & pulls line LOW
-  twi_delay(twi_dcount - 3);                  //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
+  twi_delay(twi_dcount - 3);                  //tLOW >= 4.7μsec (measured 5.125μsec), LOW period of the SCL
 
   /* continue SCL routine */
   SCL_HIGH();                                 //release the SCL line, becomes INPUT_PULLUP & pulls line high
   if (clockStretch() != true) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-  twi_delay(twi_dcount - 4);                  //tSU;STO >= 4.0μsec, set-up time for STOP condition (real time - 4.375μsec)
+  twi_delay(twi_dcount - 4);                  //tSU;STO >= 4.0μsec (measured 4.375μsec), set-up time for STOP condition
 
   /*continue SDA routine */
   SDA_HIGH();                                 //finish the STOP by releasing SDA line
@@ -302,7 +297,7 @@ static bool twi_write_bit(bool txBit)
 {
   /* start SCL routine */
   SCL_LOW();
-  twi_delay(twi_dcount - 5);                   //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.125μsec)
+  twi_delay(twi_dcount - 5);                   //tLOW >= 4.7μsec (measured 5.125μsec), LOW period of the SCL
 
   /* start SDA routine, set the bit */
   switch (txBit)
@@ -320,7 +315,7 @@ static bool twi_write_bit(bool txBit)
   /* continue SCL routine, bit is valid for read */
   SCL_HIGH();                                  //try to release the SCL line, becomes INPUT_PULLUP & pulls line high
   if (clockStretch() == false) return ~I2C_OK; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-  twi_delay(twi_dcount - 4);                   //tHIGH >= 4.0μsec, HIGH period of the SCL (real time - 4.375μsec)
+  twi_delay(twi_dcount - 4);                   //tHIGH >= 4.0μsec (measured 4.375μsec), HIGH period of the SCL
   SCL_LOW();
  
   return I2C_OK;                               //success!!!
@@ -357,7 +352,7 @@ static uint8_t twi_read_bit(void)
 
   /* start SCL & SDA routine */
   SCL_LOW();                                            //becomes OUTPUT & pulls line LOW
-  twi_delay(twi_dcount - 3);                            //tLOW >= 4.7μsec, LOW period of the SCL (real time - 5.000μsec)
+  twi_delay(twi_dcount - 3);                            //tLOW >= 4.7μsec (measured 5.000μsec), LOW period of the SCL
 
   /* continue SCL routine */
   SDA_HIGH();                                           //release the SDA line, so slave can send bit or ack/nack answer
@@ -366,7 +361,7 @@ static uint8_t twi_read_bit(void)
 
   /* continue SDA routine, read the data */
   rxBit = SDA_READ();                                   //read 7..0 data bit or 8-th NACK/ACK = 1/0 bit, 9 bits in total
-  twi_delay(twi_dcount - 6);                            //tHIGH >= 4.0μsec, HIGH period of the SCL (real time - 4.375μsec)
+  twi_delay(twi_dcount - 6);                            //tHIGH >= 4.0μsec (measured 4.375μsec), HIGH period of the SCL
   switch (rxBit)                                        //during "twi_write_byte()" removes spike after reading 9-th NACK/ACK bit 
   {
     case HIGH:
@@ -420,7 +415,7 @@ static bool twi_write_byte(uint8_t txByte)
     - when SDA remains HIGH during this 9-th clock pulse, this is defined
       as NACK (Not Acknowledge). The master can then generate either a
       STOP condition to abort the transfer, or a repeated START condition
-      to start a new transfer.
+      to start a new transfer
     - 1 is NACK
     - 0 is ACK
 */
