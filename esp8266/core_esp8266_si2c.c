@@ -192,8 +192,12 @@ static bool freeBus(void)
       to the drivers or excessive power dissipation in the system. Each signal
       line has a pull-up resistor on it, to restore the signal to high when no
       device is asserting it low
-    - however this driver used INPUT_PULLUP, because many people do not
-      know about I2C Bus Pullup Resistor
+    - however this driver used INPUT_PULLUP, because people forgetting about
+      external pull up resistors, so the code has changed a bit recently.
+      Instead of changing pin output register when banging the bits, we now
+      change pin mode register. The pin is switched between INPUT_PULLUP &
+      OUTPUT modes, which makes it either a weak pull up or a strong pull down
+      (output register has 0 written into it in advance)
 */
 /**************************************************************************/
 void twi_init(uint8_t sda, uint8_t scl)
@@ -287,8 +291,6 @@ static bool twi_write_stop(void)
       can hold the clock line SCL LOW to force the master into a wait state,
       data transfer continues when the slave is ready for another byte of
       data and releases clock line SCL
-    - the first SCL should be 1 / (tLOW + tHIGH) = bus frequency, so
-      1 / (4.700 + 4.000) = 115kHz & real 1 / (4.875 + 4.125) = 111.111kHz
     - see TI SLVA704, fig.6 on p.5
     - see NXP UM10204 p.48 and p.50 for timing details
 */
@@ -340,8 +342,6 @@ static bool twi_write_bit(bool txBit)
       STOP condition to abort the transfer, or a repeated START condition
       to start a new transfer. There are five conditions that lead to the
       generation of a NACK
-    - the first SCL should be 1 / (tLOW + tHIGH) = bus frequency, so
-      1 / (4.700 + 4.000) = 115kHz & real 1 / (4.875 + 4.125) = 111.111kHz
     - see TI SLVA704, fig.6 on p.5 or NXP UM10204, fig.4 on p.9 for more details
     - see NXP UM10204 p.48 and p.50 for timing details
 */
@@ -388,7 +388,7 @@ static uint8_t twi_read_bit(void)
     - when SDA remains HIGH during this 9-th clock pulse, this is defined
       as NACK (Not Acknowledge). The master can then generate either a
       STOP condition to abort the transfer, or a repeated START condition
-      to start a new transfer.
+      to start a new transfer
     - see NXP UM10204 p.48 and p.50 for timing details
 */
 /**************************************************************************/
