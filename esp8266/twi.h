@@ -1,42 +1,33 @@
 /**************************************************************************************/
 /*
-  twi.h - Software I2C library for esp8266
+   twi.h - Software I2C library for esp8266
 
-  Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
+   Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
 
-  This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
-  are required to interface. Connect slave to pins:
+   This library is software/bit-bang emulation of Master I²C bus protocol.
 
-  Board:                                     SDA        SCL        Level
-  ESP8266................................... GPIO4      GPIO5      3.3v/5v
-  ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
-  NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
+   Specials pins are required to interface.
+   Board:                                     SDA        SCL        Level
+   ESP8266................................... GPIO4      GPIO5      3.3v/5v
+   ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
+   NodeMCU 1.0, WeMos D1 Mini................ GPIO4/D2   GPIO5/D1   3.3v/5v
 
-  NOTE:
-  - I2C bus drivers are "open drain", meaning that they can pull the
-    corresponding signal line low, but cannot drive it high. Thus, there can
-    be no bus contention where one device is trying to drive the line high
-    while another tries to pull it low, eliminating the potential for damage
-    to the drivers or excessive power dissipation in the system. Each signal
-    line has a pull-up resistor on it, to restore the signal to high when no
-    device is asserting it low.
-
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the esp8266 core for Arduino environment.
+   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
+   This file is part of the esp8266 core for Arduino environment.
  
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  Lesser General Public License for more details.
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+   Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 /**************************************************************************************/
 
@@ -50,7 +41,7 @@ extern "C"
 {
 #endif
 
-#define TWI_I2C_SDA_POLLING_LIMIT       20   //qnt of tries to release I2C bus if slave locked SDA low
+#define TWI_I2C_SDA_POLLING_LIMIT       25   //qnt of tries to release I2C bus if slave locked SDA low
 
 #define TWI_I2C_NACK                    HIGH //1
 #define TWI_I2C_ACK                     LOW  //0
