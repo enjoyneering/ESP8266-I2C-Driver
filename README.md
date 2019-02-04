@@ -11,3 +11,5 @@ Enjoy.
 
 [license]:       https://choosealicense.com/licenses/gpl-3.0/
 [license-badge]: https://img.shields.io/aur/license/yaourt.svg
+[stars]:         https://img.shields.io/github/stars/enjoyneering/ESP8266-I2C-Driver.svg
+[stargazers]:    https://github.com/enjoyneering/ESP8266-I2C-Driver/stargazers
