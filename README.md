@@ -1,4 +1,4 @@
-[![license-badge][]][license]
+[![license-badge][]][license] [![stars][]][stargazers]
 
 # ESP8266-I2C-Driver
 Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode.
