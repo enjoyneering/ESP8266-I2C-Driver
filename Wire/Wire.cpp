@@ -119,6 +119,12 @@ void TwoWire::pins(int sda, int scl)
       to the drivers or excessive power dissipation in the system. Each signal
       line has a pull-up resistor on it, to restore the signal to high when no
       device is asserting it low.
+    - however this driver used INPUT_PULLUP, because people forgetting about
+      external pull up resistors, so the code has changed a bit recently.
+      Instead of changing pin output register when banging the bits, we now
+      change pin mode register. The pin is switched between INPUT_PULLUP &
+      OUTPUT modes, which makes it either a weak pull up or a strong pull down
+      (output register has 0 written into it in advance)
 */
 /**************************************************************************/
 void TwoWire::begin(uint8_t sda, uint8_t scl)
