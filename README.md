@@ -1,4 +1,4 @@
-[![license-badge][]][license] [![stars][]][stargazers] [![GitHub issues][]][issues]
+[![license-badge][]][license] [![stars][]][stargazers] [![hit-count][]][count] [![github-issues][]][issues]
 
 # ESP8266-I2C-Driver
 Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode.
@@ -15,5 +15,7 @@ Enjoy.
 [license]:       https://choosealicense.com/licenses/gpl-3.0/
 [stars]:         https://img.shields.io/github/stars/enjoyneering/ESP8266-I2C-Driver.svg
 [stargazers]:    https://github.com/enjoyneering/ESP8266-I2C-Driver/stargazers
-[GitHub issues]: https://img.shields.io/github/issues/enjoyneering/ESP8266-I2C-Driver.svg
+[hit-count]:     http://hits.dwyl.io/enjoyneering/HCSR04/badges.svg
+[count]:         http://hits.dwyl.io/enjoyneering/HCSR04/badges
+[github-issues]: https://img.shields.io/github/issues/enjoyneering/ESP8266-I2C-Driver.svg
 [issues]:        https://github.com/enjoyneering/ESP8266-I2C-Driver/issues/
