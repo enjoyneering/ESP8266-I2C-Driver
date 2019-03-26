@@ -15,7 +15,7 @@ Enjoy.
 [license]:       https://choosealicense.com/licenses/gpl-3.0/
 [stars]:         https://img.shields.io/github/stars/enjoyneering/ESP8266-I2C-Driver.svg
 [stargazers]:    https://github.com/enjoyneering/ESP8266-I2C-Driver/stargazers
-[hit-count]:     http://hits.dwyl.io/enjoyneering/HCSR04/badges.svg
-[count]:         http://hits.dwyl.io/enjoyneering/HCSR04/badges
+[hit-count]:     http://hits.dwyl.io/enjoyneering/ESP8266-I2C-Driver/badges.svg
+[count]:         http://hits.dwyl.io/enjoyneering/ESP8266-I2C-Driver/badges
 [github-issues]: https://img.shields.io/github/issues/enjoyneering/ESP8266-I2C-Driver.svg
 [issues]:        https://github.com/enjoyneering/ESP8266-I2C-Driver/issues/
