@@ -2,7 +2,7 @@
 /*
    si2c.h - Software I2C library for esp8266
 
-   Modified October 2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
+   Modified October 2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
    This library is software/bit-bang emulation of Master I²C bus protocol.
 
