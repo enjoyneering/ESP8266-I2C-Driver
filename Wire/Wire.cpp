@@ -53,11 +53,10 @@ extern "C"
 
 /**************************************************************************/
 /*
-    Some boards don't have SDA/SCL pins available & don't support "Wire".
-    Check here for compile-time error.
+    Some boards don't have SDA/SCL pins available & don't support "Wire.h"
 */
 /**************************************************************************/
-#if #ifndef(PIN_WIRE_SDA) || #ifndef(PIN_WIRE_SCL)
+#if !defined(PIN_WIRE_SDA) || !defined(PIN_WIRE_SCL)
 #error Wire library is not supported by this board
 #endif
 
