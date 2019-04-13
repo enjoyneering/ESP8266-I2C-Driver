@@ -5,7 +5,7 @@
   Modified          2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April    2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
-  Modified October  2017 by enjoyneering79, sourse code: https://github.com/enjoyneering/
+  Modified October  2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
   This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
   are required to interface. Connect slave to pins:
