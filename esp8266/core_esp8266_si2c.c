@@ -57,7 +57,7 @@ static   uint8_t  twi_sda               = 0;      //sda pin
 static   uint8_t  twi_scl               = 0;      //scl pin
 static   uint32_t twi_clockStretchLimit = 0;
          uint8_t  twi_dcount            = 0;
-         uint16_t preferred_si2c_clock  = 100000; //default I2C speed 100kHz
+         uint32_t preferred_si2c_clock  = 100000; //default I2C speed 100kHz
 
 static   bool     collision             = false;  //shows if bit was successfuly read from slave
 
