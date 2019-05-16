@@ -1,13 +1,13 @@
 [![license-badge][]][license] [![stars][]][stargazers] [![hit-count][]][count] [![github-issues][]][issues]
 
 # ESP8266-I2C-Driver
-Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode.
+Fixed built-in Master I²C driver for Arduino ESP8266 core. You can use it like a regular library and you don't need to change anything in your sketches. Sorry it doesn't support slave I²C mode.
 
 [Click here to download the ZIP file](https://github.com/enjoyneering/ESP8266-I2C-Driver/archive/master.zip)
 
-Copy and replace "twi.h", "core_esp8266_si2c.c" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266
+Copy and replace "**twi.h**", "**core_esp8266_si2c.c**" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266
 
-Copy and replace "Wire.h", "Wire.cpp" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\Wire
+Copy and replace "**Wire.h**", "**Wire.cpp**" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\Wire
 
 Enjoy.
 
