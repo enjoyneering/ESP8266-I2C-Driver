@@ -9,7 +9,7 @@ Copy and replace "**twi.h**", "**core_esp8266_si2c.c**" in folder %USERPROFILE%\
 
 Copy and replace "**Wire.h**", "**Wire.cpp**" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\Wire
 
-If you want to keep the original files - just change the file extension, "twi.h.OLD". Then you always can go back.
+If you want to keep the original files - just change the file extension, "**twi.h.OLD**". Then you always can go back.
 
 Enjoy.
 
