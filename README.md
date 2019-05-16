@@ -1,7 +1,7 @@
 [![license-badge][]][license] [![stars][]][stargazers] [![hit-count][]][count] [![github-issues][]][issues]
 
 # ESP8266-I2C-Driver
-Fixed built-in Master I²C driver for Arduino ESP8266 core. You can use it like a regular library and you don't need to change anything in your sketches. Sorry it doesn't support slave I²C mode.
+Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode.
 
 [Click here to download the ZIP file](https://github.com/enjoyneering/ESP8266-I2C-Driver/archive/master.zip)
 
