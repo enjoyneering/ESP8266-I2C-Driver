@@ -31,10 +31,12 @@
 */
 /**************************************************************************************/
 
-
 #include "twi.h"
 #include "pins_arduino.h"
 #include "wiring_private.h"
+
+extern "C"
+{
 
 #ifndef FCPU80
 #define FCPU80 80000000UL
@@ -116,6 +118,8 @@ static void twi_delay(uint8_t value)
   uint16_t reg = 0;
 
   for (uint8_t i = 0; i < value; i++) reg = GPI;
+
+  (void)reg;
 
   #pragma GCC diagnostic pop
 }
@@ -608,3 +612,5 @@ uint8_t twi_status()
   if (SCL_READ() == LOW)           return I2C_SCL_HELD_LOW; 
                                    return I2C_OK;
 }
+
+};
