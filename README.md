@@ -11,7 +11,7 @@ Copy and replace "**Wire.h**", "**Wire.cpp**" in folder %USERPROFILE%\AppData\Lo
 
 If you want to keep the original files - just change the file extension* to "**twi.h.OLD**" and etc. Then you always can go back.
 
-* if you change the file name you get an error at compile time
+*if you change the file name you get an error at compile time
 Enjoy.
 
 [license-badge]: https://img.shields.io/badge/License-GPLv3-blue.svg
