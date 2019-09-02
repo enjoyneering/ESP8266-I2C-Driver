@@ -1,15 +1,13 @@
 /**************************************************************************************/
 /*
-  TwoWire.cpp - TWI/I2C library for esp8266 Arduino & Wiring
+  TwoWire.cpp - master TWI/I²C library for ESP8266 Arduino
 
   Modified          2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April    2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
   Modified October  2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
-  This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
-  are required to interface. Connect slave to pins:
-
+  Specials pins are required:
   Board:                                     SDA        SCL        Level
   ESP8266................................... GPIO4      GPIO5      3.3v/5v
   ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
@@ -157,7 +155,7 @@ void TwoWire::begin(void)
     NOTE:
     - speed @ 80Mhz  CPU: 50kHz..400KHz with 100kHz step
     - speed @ 160Mhz CPU: 50kHz..700KHz with 100kHz step
-    - 100KHz by default, but real speed ~111kHz @ 80Mhz CPU
+    - 100KHz by default, measured about 111kHz @ 80Mhz CPU
 */
 /**************************************************************************/
 void TwoWire::setClock(uint32_t frequency)
@@ -184,15 +182,15 @@ void TwoWire::setClockStretchLimit(uint32_t limit)
 /*
     beginTransmission(), public method
 
-    Sets all rx buffer variebles before reading
+    Sets all tx buffer variebles before reading
 */
 /**************************************************************************/
 void TwoWire::beginTransmission(uint8_t address)
 {
   _txAddress      = address;
-  _rxBufferIndex  = 0;
-  _rxBufferLength = 0;
-  _transmitting   = true;
+  _txBufferIndex  = 0;
+  _txBufferLength = 0;
+  _transmitting   = true;   //ready to transmit flag, true when address is set up
 }
 
 void TwoWire::beginTransmission(int address)
@@ -202,7 +200,7 @@ void TwoWire::beginTransmission(int address)
 
 /**************************************************************************/
 /*
-    write(), public method
+    write(), public Print class method
 
     Adds outcoming ONE byte into tx buffer for future transmit
     Returns the qnt of added bytes, in our case 1 or 0
@@ -210,26 +208,19 @@ void TwoWire::beginTransmission(int address)
 /**************************************************************************/
 size_t TwoWire::write(uint8_t data)
 {
-  if (_transmitting == true)
-  {
-    if (_txBufferLength >= TWI_I2C_BUFFER_LENGTH)
-    {
-      setWriteError();
-      return 0;
-    }
-    /* put one byte into the tx buffer */
-    _txBuffer[_txBufferIndex] = data;
-    _txBufferIndex++;
-    _txBufferLength = _txBufferIndex;
-  }
-  else return 0;
+  if (_transmitting != true || _txBufferLength > TWI_I2C_BUFFER_LENGTH) return 0; //slave address not set or data too long to fit in tx buffer
+
+  /* put one byte into tx buffer */
+  _txBuffer[_txBufferIndex] = data;
+  _txBufferIndex++;
+  _txBufferLength = _txBufferIndex;
 
   return 1;
 }
 
 /**************************************************************************/
 /*
-    write(), public method
+    write(), public Print class method
 
     Adds outcoming ARRAY of bytes into tx buffer for future transmit
     Returns the qnt of successfully added bytes
@@ -239,8 +230,9 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 {
   for(size_t i = 0; i < quantity; i++)
   {
-    if (write(buffer[i]) != 1) return i; //put the byte from array into the tx buffer
+    if (write(buffer[i]) == 0) return i; //add one byte from array into tx buffer
   }
+
   return quantity;
 }
 
@@ -258,7 +250,7 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
     4 - can't start, line busy
 
     NOTE:
-    - byte is transferred with the most significant bit (MSB) first
+    - byte is transferred with the most significant bit (MSB) first, 7..0 bit
     - when master sets SDA HIGH during this 9-th clock pulse, this is
       defined as NACK (Not Acknowledge). The master generate STOP condition
       to abort the transfer
@@ -272,11 +264,11 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 /**************************************************************************/
 uint8_t TwoWire::endTransmission(bool sendStop)
 {
-  if (_txBufferLength >= TWI_I2C_BUFFER_LENGTH) return 1;
+  if (_txBufferLength > TWI_I2C_BUFFER_LENGTH) return 1;                         //data too long to fit in tx buffer
 
-  int8_t reply = twi_writeTo(_txAddress, _txBuffer, _txBufferLength, sendStop);
+  uint8_t reply = twi_writeTo(_txAddress, _txBuffer, _txBufferLength, sendStop); //write data from tx buffer to I2C slave
 
-  flushTX();
+  flushTX();                                                                     //clear tx buffer for future data
 
   return reply;
 }
@@ -296,13 +288,13 @@ uint8_t TwoWire::endTransmission(void)
 /**************************************************************************/
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool sendStop)
 {
-  flushRX();                                                                                //do we need it here???
+  if (quantity == 0)                    return 0;
+  if (quantity > TWI_I2C_BUFFER_LENGTH) quantity = TWI_I2C_BUFFER_LENGTH; //safety check
 
-  if (quantity == 0 || quantity >= TWI_I2C_BUFFER_LENGTH) quantity = TWI_I2C_BUFFER_LENGTH; //safety check
+  flushRX();                                                              //clear rx buffer for new data
 
-  uint8_t length = twi_readFrom(address, _rxBuffer, quantity, sendStop);
-
-  //_rxBufferIndex  = 0;                                                                    //this vs flushRX()??? 
+  uint8_t length = twi_readFrom(address, _rxBuffer, quantity, sendStop);  //read new data from I2C slave to rx buffer
+ 
   _rxBufferLength = length;
 
   return length;
@@ -344,9 +336,9 @@ uint8_t TwoWire::requestFrom(int address, int quantity)
 
       do
       {
-        Wire.requestFrom(ADDRESS, 1, true); //read slave & fill the rxbuffer with data
+        Wire.requestFrom(ADDRESS, 1, true); //read slave & fill the rx buffer with data
       }
-      while (Wire.available() != 1);        //check available data size in rxbuffer
+      while (Wire.available() != 1);        //check available data size in rx buffer
 */
 /**************************************************************************/
 int TwoWire::available(void)
@@ -371,13 +363,12 @@ int TwoWire::available(void)
 /**************************************************************************/
 int TwoWire::read(void)
 {
-  int value = 0;
+  if (_rxBufferIndex > _rxBufferLength) return 0;
+  
+  int value = _rxBuffer[_rxBufferIndex];
 
-  if (_rxBufferIndex < _rxBufferLength)
-  {
-    value = _rxBuffer[_rxBufferIndex];
-    _rxBufferIndex++;
-  }
+  _rxBufferIndex++;
+
   return value;
 }
 
@@ -392,11 +383,37 @@ int TwoWire::read(void)
 /**************************************************************************/
 int TwoWire::peek(void)
 {
-  int value = 0;
+  if (_rxBufferIndex < _rxBufferLength) return _rxBuffer[_rxBufferIndex];
+                                        return 0;
+}
 
-  if (_rxBufferIndex < _rxBufferLength) value = _rxBuffer[_rxBufferIndex];
+/**************************************************************************/
+/*
+    flushRX(), private method
 
-  return value;
+    Clears & resets rx buffers
+*/
+/**************************************************************************/
+void TwoWire::flushRX(void)
+{
+  _rxBufferIndex  = 0;
+  _rxBufferLength = 0;
+//memset(_rxBuffer, 0, TWI_I2C_BUFFER_LENGTH); //sets all bytes in rx buffer to "0"
+}
+
+/**************************************************************************/
+/*
+    flushTX(), private method
+
+    Clears & resets tx buffers
+*/
+/**************************************************************************/
+void TwoWire::flushTX(void)
+{
+  _txBufferIndex  = 0;
+  _txBufferLength = 0;
+  _transmitting   = false;                     //ready to transmit flag, true when address is set up
+//memset(_txBuffer, 0, TWI_I2C_BUFFER_LENGTH); //sets all bytes in tx buffer to "0"
 }
 
 /**************************************************************************/
@@ -410,14 +427,6 @@ void TwoWire::flush(void)
 {
   flushTX();
   flushRX();
-
-  /*
-  _rxBufferIndex  = 0;
-  _rxBufferLength = 0;
-
-  _rxBufferIndex  = 0;
-  _rxBufferLength = 0;
- */
 }
 
 /**************************************************************************/
@@ -425,6 +434,14 @@ void TwoWire::flush(void)
     status(), public method
 
     Returns i2c bus status
+
+    NOTE:
+    - returned code:
+      - I2C_OK                      0, OK
+      - I2C_SDA_HELD_LOW            1, SDA held low by another device, no procedure available to recover
+      - I2C_SDA_HELD_LOW_AFTER_INIT 2, SDA held low beyond slave clock stretch time, increase stretch time
+      - I2C_SCL_HELD_LOW            3, SCL held low by another device, no procedure available to recover
+      - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time, stretch stretch time
 */
 /**************************************************************************/
 uint8_t TwoWire::status()
@@ -440,7 +457,6 @@ uint8_t TwoWire::status()
 void TwoWire::onReceive(void (*function)(int))
 {
   (void)function;
-  //user_onReceive = function;
 }
 
 /**************************************************************************/
@@ -451,37 +467,6 @@ void TwoWire::onReceive(void (*function)(int))
 void TwoWire::onRequest(void (*function)(void))
 {
   (void)function;
-  //user_onRequest = function;
-}
-
-
-/**************************************************************************/
-/*
-    flushRX(), private method
-
-    Clears & resets rx buffers
-*/
-/**************************************************************************/
-void TwoWire::flushRX(void)
-{
-  _rxBufferIndex  = 0;
-  _rxBufferLength = 0;
-  //memset(_rxBuffer, 0, TWI_I2C_BUFFER_LENGTH); //sets all bytes in the buffer to "0"
-}
-
-/**************************************************************************/
-/*
-    flushTX(), private method
-
-    Clears & resets tx buffers
-*/
-/**************************************************************************/
-void TwoWire::flushTX(void)
-{
-  _txBufferIndex  = 0;
-  _txBufferLength = 0;
-  _transmitting   = false;                     //ready to transmit flag
-  //memset(_txBuffer, 0, TWI_I2C_BUFFER_LENGTH); //sets all bytes in the buffer to "0"
 }
 
 /**************************************************************************/
