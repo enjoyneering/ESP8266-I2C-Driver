@@ -1,12 +1,10 @@
 /**************************************************************************************/
 /*
-   twi.h - Software I2C library for esp8266
+   twi.h - Software/bit-bang master I²C library for ESP8266 Arduino
 
    Modified October 2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
-   This library is software/bit-bang emulation of Master I²C bus protocol.
-
-   Specials pins are required to interface.
+   Specials pins are required:
    Board:                                     SDA        SCL        Level
    ESP8266................................... GPIO4      GPIO5      3.3v/5v
    ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
@@ -40,6 +38,12 @@
 extern "C"
 {
 #endif
+
+/* 
+The arduino toolchain includes library headers before it includes your sketch.
+Unfortunately, you cannot #define "TWI_I2C_DISABLE_INTERRUPTS" in a sketch & get it in the library.
+*/
+//defined TWI_I2C_DISABLE_INTERRUPTS
 
 #define TWI_I2C_SDA_POLLING_LIMIT       25   //qnt of tries to release I2C bus if slave locked SDA low
 
