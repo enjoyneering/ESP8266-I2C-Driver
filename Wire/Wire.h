@@ -1,15 +1,13 @@
 /**************************************************************************************/
 /*
-  TwoWire.h - TWI/I2C library for esp8266 Arduino & Wiring
+  TwoWire.h - master TWI/I²C library for ESP8266 Arduino
 
   Modified          2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April    2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
   Modified October  2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
-  This library is software/bit-bang emulation of Master I2C bus protocol, specials pins
-  are required to interface. Connect slave to pins:
-
+  Specials pins are required:
   Board:                                     SDA        SCL        Level
   ESP8266................................... GPIO4      GPIO5      3.3v/5v
   ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
@@ -46,6 +44,10 @@
 #include <inttypes.h>
 #include "Stream.h"
 
+/* 
+The arduino toolchain includes library headers before it includes your sketch.
+Unfortunately, you cannot #define "TWI_I2C_BUFFER_LENGTH" in a sketch & get it in the library.
+*/
 #ifndef TWI_I2C_BUFFER_LENGTH
 #define TWI_I2C_BUFFER_LENGTH 32 //32-bytes rx buffer + 32-bytes tx buffer, 64-bytes total
 #endif
@@ -66,10 +68,12 @@ class TwoWire : public Stream
 
     virtual size_t  write(uint8_t data);
     virtual size_t  write(const uint8_t *buffer, size_t quantity);
-    inline  size_t  write(int data)           {return write((uint8_t)data);}
-    inline  size_t  write(unsigned int data)  {return write((uint8_t)data);}
-    inline  size_t  write(long data)          {return write((uint8_t)data);}
-    inline  size_t  write(unsigned long data) {return write((uint8_t)data);}
+
+  //inline  size_t  write(int data)           {return write((uint8_t)data);}
+  //inline  size_t  write(unsigned int data)  {return write((uint8_t)data);}
+  //inline  size_t  write(long data)          {return write((uint8_t)data);}
+  //inline  size_t  write(unsigned long data) {return write((uint8_t)data);}
+
             using   Print::write;
 
             uint8_t endTransmission(bool sendStop);
@@ -85,6 +89,8 @@ class TwoWire : public Stream
     virtual int     read(void);
 
     virtual int     peek(void);
+            void    flushRX(void);
+            void    flushTX(void);
     virtual void    flush(void);
             uint8_t status(void);
 
@@ -100,10 +106,7 @@ class TwoWire : public Stream
     static uint8_t _txAddress;
     static uint8_t _txBufferIndex;
     static uint8_t _txBufferLength;
-    static bool    _transmitting;   //ready to transmit flag, true when address is set up
-
-           void flushRX(void);
-           void flushTX(void);
+    static bool    _transmitting;
 
     static void onReceiveService(uint8_t *inBytes, int numBytes);
     static void onRequestService(void);
