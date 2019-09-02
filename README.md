@@ -1,7 +1,13 @@
 [![license-badge][]][license] [![stars][]][stargazers] [![hit-count][]][count] [![github-issues][]][issues]
 
 # ESP8266-I2C-Driver
-Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode. 
+Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't support slave I²C mode.
+
+| Board | SDA | SCL | Level |
+| ---- | ---- | ---- | ---- |
+| ESP8266 | GPIO4 | GPIO4 | 3.3v/5v |
+| ESP8266 ESP-01 | GPIO0/D5 | GPIO2/D3 | 3.3v/5v |
+| NodeMCU 1.0, WeMos D1 Mini | GPIO4/D2 | GPIO5/D1 | 3.3v/5v |
 
 [Click here to download the ZIP file](https://github.com/enjoyneering/ESP8266-I2C-Driver/archive/master.zip)
 
@@ -12,14 +18,6 @@ Copy and replace "**Wire.h**", "**Wire.cpp**" in folder %USERPROFILE%\AppData\Lo
 If you want to keep the original files - just change the file extension* to "**twi.h.OLD**" and etc. Then you always can go back.
 
 *if you change the file name you get an error at compile time
-
-
-| Board | SDA | SCL | Level |
-| ---- | ---- | ---- | ---- |
-| ESP8266 | GPIO4 | GPIO4 | 3.3v/5v |
-| ESP8266 ESP-01 | GPIO0/D5 | GPIO2/D3 | 3.3v/5v |
-| NodeMCU 1.0, WeMos D1 Mini | GPIO4/D2 | GPIO5/D1 | 3.3v/5v |
-
 
 Enjoy.
 
