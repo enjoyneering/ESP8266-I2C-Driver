@@ -1,12 +1,10 @@
 /**************************************************************************************/
 /*
-   si2c.h - Software I2C library for esp8266
+   si2c.h - Software/bit-bang master I²C library for ESP8266 Arduino
 
    Modified October 2017 by enjoyneering79, source code: https://github.com/enjoyneering/
 
-   This library is software/bit-bang emulation of Master I²C bus protocol.
-
-   Specials pins are required to interface.
+   Specials pins are required:
    Board:                                     SDA        SCL        Level
    ESP8266................................... GPIO4      GPIO5      3.3v/5v
    ESP8266 ESP-01............................ GPIO0/D5   GPIO2/D3   3.3v/5v
@@ -156,9 +154,9 @@ static bool clockStretch(void)
 
     NOTE:
     - if for some reason previouse reading from diff slave is not done yet
-    - bus frequency is equal to first SCL, 1 / (tLOW + tHIGH):
-      -- specification frequency: 1 / (4.700 + 4.000) = 114.943kHz
-      -- measured      frequency: 1 / (4.875 + 4.125) = 111.111kHz
+    - bus frequency is equal to first SCL = 1 / (tLOW + tHIGH):
+      - specification frequency: 1 / (4.700 + 4.000) = 114.943kHz
+      - measured      frequency: 1 / (4.875 + 4.125) = 111.111kHz
     - see NXP UM10204 p.48 and p.50 for timing details
 */
 /**************************************************************************/
@@ -401,7 +399,7 @@ static bool twi_write_byte(uint8_t txByte)
   /* write the byte, in order MSB->LSB (7..0 bit) */
   for (int8_t i = 7; i >= 0; i--)
   {
-    if (twi_write_bit(bitRead(txByte, i)) != I2C_OK) return TWI_I2C_NACK; //write the byte in order MSB->LSB (7..0 bit), ERROR - NACK!!!
+    if (twi_write_bit(bitRead(txByte, i)) != I2C_OK) return TWI_I2C_NACK; //write one byte in order MSB->LSB (7..0 bit), ERROR - NACK!!!
   }
 
   if (twi_read_bit() == TWI_I2C_ACK) return TWI_I2C_ACK;                  //reads 9-th bit NACK/ACK
@@ -599,9 +597,9 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
     returned code:
      - I2C_OK                      0, OK
      - I2C_SDA_HELD_LOW            1, SDA held low by another device, no procedure available to recover
-     - I2C_SDA_HELD_LOW_AFTER_INIT 2, SDA held low beyond slave clock stretch time
+     - I2C_SDA_HELD_LOW_AFTER_INIT 2, SDA held low beyond slave clock stretch time, increase stretch time
      - I2C_SCL_HELD_LOW            3, SCL held low by another device, no procedure available to recover
-     - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time
+     - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time, increase stretch time
 */
 /**************************************************************************/
 uint8_t twi_status()
