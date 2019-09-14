@@ -82,7 +82,7 @@ void twi_setClock(uint32_t freq)
   else if (freq <= 250000) twi_dcount = 6;   //~250KHz
   else if (freq <= 300000) twi_dcount = 5;   //~300KHz
   else if (freq <= 400000) twi_dcount = 3;   //~400KHz
-  else                     twi_dcount = 1;   //~400KHz
+  else                     twi_dcount = 3;   //~400KHz
   #else
   if      (freq <= 10000)  twi_dcount = 350; //~10KHz
   else if (freq <= 15000)  twi_dcount = 240; //~15KHz
