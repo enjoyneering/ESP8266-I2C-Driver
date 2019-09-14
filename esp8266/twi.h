@@ -2,7 +2,7 @@
 /*
    twi.h - Software/bit-bang master I²C library for ESP8266 Arduino
 
-   Modified October 2017 by enjoyneering79, source code: https://github.com/enjoyneering/
+   Modified 2019 by enjoyneering79, source code: https://github.com/enjoyneering/
 
    Specials pins are required:
    Board:                                     SDA        SCL        Level
@@ -41,25 +41,27 @@ extern "C"
 
 /* 
 The arduino toolchain includes library headers before it includes your sketch.
-Unfortunately, you cannot #define "TWI_I2C_DISABLE_INTERRUPTS" in a sketch & get it in the library.
+Unfortunately, you cannot #define in a sketch & get it in the library.
 */
-//defined TWI_I2C_DISABLE_INTERRUPTS
+//defined TWI_I2C_DISABLE_INTERRUPTS           //uncomment to disable interrupts during read/write
 
-#define TWI_I2C_SDA_POLLING_LIMIT       25   //qnt of tries to release I2C bus if slave locked SDA low
+#define TWI_I2C_DEFAULT_CLOCK           100000 //default I2C speed, in Hz
+#define TWI_I2C_SCL_STRCH_LIMIT         250    //maximum SCL stretch time, in μsec
+#define TWI_I2C_SDA_POLLING_LIMIT       32     //number of attempts to release I2C bus if slave blocked SDA low
 
-#define TWI_I2C_NACK                    HIGH //1
-#define TWI_I2C_ACK                     LOW  //0
+#define TWI_I2C_NACK                    HIGH   //1
+#define TWI_I2C_ACK                     LOW    //0
 
-#define I2C_OK                          0    //bus OK
-#define I2C_SDA_HELD_LOW                1    //SDA held low by another device, no procedure available to recover
-#define I2C_SDA_HELD_LOW_AFTER_INIT     2    //SDA held low beyond slave clock stretch time
-#define I2C_SCL_HELD_LOW                3    //SCL held low by another device, no procedure available to recover
-#define I2C_SCL_HELD_LOW_AFTER_READ     4    //SCL held low beyond slave clock stretch time
+#define I2C_OK                          0      //bus OK
+#define I2C_SDA_HELD_LOW                1      //SDA held low by another device, no procedure available to recover
+#define I2C_SDA_HELD_LOW_AFTER_INIT     2      //SDA held low beyond slave clock stretch time
+#define I2C_SCL_HELD_LOW                3      //SCL held low by another device, no procedure available to recover
+#define I2C_SCL_HELD_LOW_AFTER_READ     4      //SCL held low beyond slave clock stretch time
 
 
 void    twi_init(uint8_t sda, uint8_t scl);
 void    twi_setClock(uint32_t freq);
-void    twi_setClockStretchLimit(uint32_t limit);
+void    twi_setClockStretchLimit(uint32_t limit = TWI_I2C_SCL_STRCH_LIMIT);
 uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendStop);
 uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool sendStop);
 uint8_t twi_status();
