@@ -5,7 +5,7 @@
   Modified          2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April    2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
-  Modified October  2017 by enjoyneering79, source code: https://github.com/enjoyneering/
+  Modified          2019 by enjoyneering79, source code: https://github.com/enjoyneering/
 
   Specials pins are required:
   Board:                                     SDA        SCL        Level
@@ -228,7 +228,7 @@ size_t TwoWire::write(uint8_t data)
 /**************************************************************************/
 size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 {
-  for(size_t i = 0; i < quantity; i++)
+  for (size_t i = 0; i < quantity; i++)
   {
     if (write(buffer[i]) == 0) return i; //add one byte from array into tx buffer
   }
