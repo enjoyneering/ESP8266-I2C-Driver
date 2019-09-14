@@ -164,7 +164,7 @@ static bool clockStretch(void)
   {
     while (SCL_READ() == LOW)
     {
-      yield();                                   //can slow down up to 0Hz, block SCL line forever
+      yield();                                   //can slow down up to 0Hz & block SCL line forever
     }
   }
 
