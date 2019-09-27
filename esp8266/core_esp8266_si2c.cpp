@@ -511,8 +511,6 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendS
 {
   /* send start */
   if (twi_write_start() != I2C_OK) return 4;       //line is busy!!!
-  }
-
 
   /* write address */
   if (twi_write_byte(address << 1) != TWI_I2C_ACK) //address is seven bits long followed by eighth data direction bit, "0" indicates WRITE
@@ -566,8 +564,6 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
 
   /* send start */
   if (twi_write_start() != I2C_OK) return 0;                //error, line is busy!!!
-  }
-
 
   /* write address */
   if (twi_write_byte((address << 1) | 0x01) != TWI_I2C_ACK) //address is seven bits long followed by eighth data direction bit, "1" indicates READ
