@@ -121,14 +121,14 @@ void twi_setClockStretchLimit(uint32_t limit)
 /**************************************************************************/
 static void twi_delay(int16_t value)
 {
+  if (value < 1) value = twi_dcount;
+
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
   uint16_t reg = 0;
 
-  if (value <= 0) value = twi_dcount;
-
-  for (uint16_t i = 0; i < value; i++) reg = GPI;
+  for (uint16_t i = 0; i < value; i++) reg = GPI; //read input level
 
   (void)reg;
 
@@ -514,13 +514,25 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendS
   #endif
 
   /* send start */
-  if (twi_write_start() != I2C_OK) return 4;       //line is busy!!!
+  if (twi_write_start() != I2C_OK)
+  {
+    #if defined TWI_I2C_DISABLE_INTERRUPTS
+    interrupts();                                  //re-enable all interrupts
+    #endif
+
+    return 4;                                      //line is busy!!!
+  }
 
 
   /* write address */
   if (twi_write_byte(address << 1) != TWI_I2C_ACK) //address is seven bits long followed by eighth data direction bit, "0" indicates WRITE
   {
     twi_write_stop();                              //always use stop after "twi_write_start()"
+
+    #if defined TWI_I2C_DISABLE_INTERRUPTS
+    interrupts();                                  //re-enable all interrupts
+    #endif
+
     return 2;                                      //error, received NACK during address transmission!!!
   }
 
@@ -530,6 +542,11 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *buffer, uint8_t length, bool sendS
     if (twi_write_byte(buffer[i]) != TWI_I2C_ACK)  //error handler
     {
       twi_write_stop();                            //always use stop after "twi_write_start()"
+
+      #if defined TWI_I2C_DISABLE_INTERRUPTS
+      interrupts();                                //re-enable all interrupts
+      #endif
+
       return 3;                                    //error, received NACK during data transmission!!!
     }
   }
@@ -571,18 +588,28 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
   noInterrupts();                                           //disable all interrupts
   #endif
 
-  if (length < 1) return 0;                                 //nothing to read
-
-  length = length - 1;                                      //buffer array starts from zero
+  length = length - 1;                                      //buffer array starts from zero, zero length safety check is in Wire library
 
   /* send start */
-  if (twi_write_start() != I2C_OK) return 0;                //error, line is busy!!!
+  if (twi_write_start() != I2C_OK)
+  {
+    #if defined TWI_I2C_DISABLE_INTERRUPTS
+    interrupts();                                           //re-enable all interrupts
+    #endif
+
+    return 0;                                               //error, line is busy!!!
+  }
 
 
   /* write address */
   if (twi_write_byte((address << 1) | 0x01) != TWI_I2C_ACK) //address is seven bits long followed by eighth data direction bit, "1" indicates READ
   {
     twi_write_stop();                                       //always use stop after "twi_write_start()"
+
+    #if defined TWI_I2C_DISABLE_INTERRUPTS
+    interrupts();                                           //re-enable all interrupts
+    #endif
+
     return 0;                                               //error, received NACK during address transmition!!!
   }
 
@@ -594,6 +621,11 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
     if (collision == true)                                  //error reading byte from slave
     {
       twi_write_stop();                                     //always use stop after "twi_write_start()"
+
+      #if defined TWI_I2C_DISABLE_INTERRUPTS
+      interrupts();                                         //re-enable all interrupts
+      #endif
+
       return i;                                             //return qnt of successfully received bytes
     }
   }
@@ -614,6 +646,11 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
   if (collision == true)                                    //error reading last byte from slave
   {
     if (sendStop == LOW) twi_write_stop();                  //always use stop after "twi_write_start()"
+
+    #if defined TWI_I2C_DISABLE_INTERRUPTS
+    interrupts();                                           //re-enable all interrupts
+    #endif
+
     return 0;
   }
 
