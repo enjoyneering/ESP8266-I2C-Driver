@@ -265,7 +265,15 @@ uint8_t TwoWire::endTransmission(bool sendStop)
 {
   if (_txBufferLength > TWI_I2C_BUFFER_LENGTH) return 1;                         //data too long to fit in tx buffer
 
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  noInterrupts();                                                                //disable all interrupts
+  #endif
+
   uint8_t reply = twi_writeTo(_txAddress, _txBuffer, _txBufferLength, sendStop); //write data from tx buffer to I2C slave
+
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  interrupts();                                                                  //re-enable all interrupts
+  #endif
 
   flushTX();                                                                     //clear tx buffer for future data
 
@@ -292,7 +300,15 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool sendStop)
 
   flushRX();                                                              //clear rx buffer for new data
 
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  noInterrupts();                                                         //disable all interrupts
+  #endif
+
   uint8_t length = twi_readFrom(address, _rxBuffer, quantity, sendStop);  //read new data from I2C slave to rx buffer
+
+  #if defined TWI_I2C_DISABLE_INTERRUPTS
+  interrupts();                                                           //re-enable all interrupts
+  #endif
  
   _rxBufferLength = length;
 
