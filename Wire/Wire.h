@@ -46,7 +46,7 @@
 
 /* 
 The arduino toolchain includes library headers before it includes your sketch.
-Unfortunately, you cannot #define "TWI_I2C_BUFFER_LENGTH" in a sketch & get it in the library.
+Unfortunately, you cannot #define in a sketch & get it in the library.
 */
 #ifndef TWI_I2C_BUFFER_LENGTH
 #define TWI_I2C_BUFFER_LENGTH 32 //32-bytes rx buffer + 32-bytes tx buffer, 64-bytes total
