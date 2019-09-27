@@ -153,9 +153,8 @@ void TwoWire::begin(void)
     Sets i2c speed, in Hz
 
     NOTE:
-    - speed @ 80Mhz  CPU: 50kHz..400KHz with 100kHz step
-    - speed @ 160Mhz CPU: 50kHz..700KHz with 100kHz step
-    - 100KHz by default, measured about 111kHz @ 80Mhz CPU
+    - speed @ 80Mhz  CPU: 10kHz..400KHz
+    - speed @ 160Mhz CPU: 10kHz..700KHz
 */
 /**************************************************************************/
 void TwoWire::setClock(uint32_t frequency)
@@ -170,7 +169,7 @@ void TwoWire::setClock(uint32_t frequency)
     Sets SCL stretch limit, in μsec
 
     NOTE:
-    - 230 μsec by default 
+    - 1250 μsec by default 
 */
 /**************************************************************************/
 void TwoWire::setClockStretchLimit(uint32_t limit)
@@ -230,7 +229,7 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 {
   for (size_t i = 0; i < quantity; i++)
   {
-    if (write(buffer[i]) == 0) return i; //add one byte from array into tx buffer
+    if (write(buffer[i]) == 0) return i; //add one byte from array into tx buffer, if error return qnt of successfully added bytes
   }
 
   return quantity;
@@ -288,7 +287,7 @@ uint8_t TwoWire::endTransmission(void)
 /**************************************************************************/
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool sendStop)
 {
-  if (quantity == 0)                    return 0;
+  if (quantity == 0)                    return 0;                         //nothing to read
   if (quantity > TWI_I2C_BUFFER_LENGTH) quantity = TWI_I2C_BUFFER_LENGTH; //safety check
 
   flushRX();                                                              //clear rx buffer for new data
