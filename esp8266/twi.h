@@ -46,7 +46,7 @@ Unfortunately, you cannot #define in a sketch & get it in the library.
 //defined TWI_I2C_DISABLE_INTERRUPTS           //uncomment to disable interrupts during read/write
 
 #define TWI_I2C_DEFAULT_CLOCK           100000 //default I2C speed, in Hz
-#define TWI_I2C_SCL_STRCH_LIMIT         250    //maximum SCL stretch time, in μsec
+#define TWI_I2C_SCL_STRCH_LIMIT         1250   //maximum SCL stretch time, in μsec
 #define TWI_I2C_SDA_POLLING_LIMIT       32     //number of attempts to release I2C bus if slave blocked SDA low
 
 #define TWI_I2C_NACK                    HIGH   //1
