@@ -241,14 +241,13 @@ size_t TwoWire::write(const uint8_t *buffer, size_t quantity)
 
     Transmits the data from rx buffer to slave.
 
-    Returns the i2c bus state:
-    0 - success
-    1 - data too long to fit in transmit buffer
-    2 - received NACK on transmit of address
-    3 - received NACK on transmit of data
-    4 - can't start, line busy
-
     NOTE:
+    - i2c bus status reply:
+        0 - success
+        1 - data too long to fit in transmit buffer
+        2 - received NACK on transmit of address
+        3 - received NACK on transmit of data
+        4 - can't start, line busy
     - byte is transferred with the most significant bit (MSB) first, 7..0 bit
     - when master sets SDA HIGH during this 9-th clock pulse, this is
       defined as NACK (Not Acknowledge). The master generate STOP condition
