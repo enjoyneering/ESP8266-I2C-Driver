@@ -121,7 +121,7 @@ void twi_setClockStretchLimit(uint32_t limit)
 /**************************************************************************/
 static void twi_delay(int16_t value)
 {
-  if (value < 1) value = twi_dcount;
+  if (value < 1) value = twi_dcount; //to avoid nagative values
 
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -178,102 +178,40 @@ static bool clockStretch(void)
     Dirty hack to release I2C bus if slave locked SDA low
 
     NOTE:
-    - if SDA stuck LOW, the master should send nine clock pulses. The device
-      that held the bus LOW should release it sometime within those nine
-      clocks. If not, then use the HW reset or cycle power to clear the bus
-    - if for some reason previouse reading from diff slave is not done yet
-    - bus frequency is equal to first SCL = 1 / (tLOW + tHIGH):
-      - specification frequency: 1 / (4.700 + 4.000) = 114.943kHz
-      - measured      frequency: 1 / (4.875 + 4.125) = 111.111kHz
+    - i2c bus status reply:
+        - I2C_SDA_HELD_LOW            1, SDA held low by another device, no procedure available to recover
+        - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time, increase stretch time
+        - I2C_SDA_OK                  5, SDA free
+        - I2C_SDA_RELEASED            6, SDA released after use by another device
+    - if SDA stuck LOW, the master should send 9 clock pulses. The device
+      that held the bus LOW should release it sometime within those 9 clocks.
+      If not, then use the MCU HW reset or cycle power to clear the bus
+    - see Analog Device application note AN-686 for more details
+    - bus frequency is equal to first SCL = 1 / (tLOW + tHIGH),
+                                      SCL = 1 / (4.7μsec + 4.0μsec) = 115kHz 
     - see NXP UM10204 p.48 and p.50 for timing details
 */
 /**************************************************************************/
-static bool freeBus(void)
+static uint8_t freeBus(void)
 {
+  if (SDA_READ() == HIGH) return I2C_SDA_OK;                        //SDA is free
+
   int8_t pollCounter = TWI_I2C_SDA_POLLING_LIMIT;
 
   /* SDA is low, I2C bus is locked */
   while (SDA_READ() == LOW)
   {
-    if (pollCounter-- < 0) return false;      //error handler, ERROR - SDA busy!!!
+    if (pollCounter-- < 0) return I2C_SDA_HELD_LOW;                 //error handler, ERROR - SDA busy!!!
 
-    SCL_LOW();                                //becomes OUTPUT & pulls line LOW
-    twi_delay(twi_dcount - 4);                //tLOW >= 4.7μsec is LOW period of the SCL
+    SCL_LOW();                                                      //becomes OUTPUT & pulls line LOW
+    twi_delay(twi_dcount - 3);                                      //tLOW >= 4.7μsec is LOW period of the SCL
 
-    SCL_HIGH();                               //release the SCL bus, so we can read a bit or ack/nack answer from slave
-    if (clockStretch() != true) return false; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
-    twi_delay(twi_dcount - 4);                //tHIGH >= 4.0μsec is HIGH period of the SCL
+    SCL_HIGH();                                                     //release the SCL bus, so we can read a bit or ack/nack answer from slave
+    if (clockStretch() != true) return I2C_SCL_HELD_LOW_AFTER_READ; //stretching the clock slave is buuuuuusy, ERROR - SCL busy!!!
+    twi_delay(twi_dcount - 3);                                      //tHIGH >= 4.0μsec is HIGH period of the SCL
   }
 
-  return true;                                //SDA released!!!
-}
-
-/**************************************************************************/
-/*
-    twi_init
-
-    Initialisation of software/bit-bang master I2C bus protocol
-
-    NOTE:
-    - normaly I2C bus drivers are "open drain", meaning that they can pull the
-      corresponding signal line low, but cannot drive it high. Thus, there can
-      be no bus contention where one device is trying to drive the line high
-      while another tries to pull it low, eliminating the potential for damage
-      to the drivers or excessive power dissipation in the system. Each signal
-      line has a pull-up resistor on it, to restore the signal to high when no
-      device is asserting it low
-    - however this driver used INPUT_PULLUP, because people forgetting about
-      external pull up resistors, so the code has changed a bit recently.
-      Instead of changing pin output register when banging the bits, we now
-      change pin mode register. The pin is switched between INPUT_PULLUP &
-      OUTPUT modes, which makes it either a weak pull up or a strong pull down
-      (output register has 0 written into it in advance)
-*/
-/**************************************************************************/
-void twi_init(uint8_t sda, uint8_t scl)
-{
-  twi_sda = sda;
-  twi_scl = scl;
-
-  SCL_HIGH();                                        //becomes INPUT_PULLUP & pulls line high
-  SDA_HIGH();                                        //becomes INPUT_PULLUP & pulls line high
-  delay(20);                                         //some slave needs > 15msec to reach the idle state
-
-  twi_setClock(preferred_si2c_clock);                //~100KHz, by default
-  twi_setClockStretchLimit();                        //set stretch SCL limit, in μsec
-
-  freeBus();                                         //dirty hack to release locked SDA line
-}
-
-/**************************************************************************/
-/*
-    twi_write_start()
-    
-    Sends start pulse & returns false if SCL or SDA is busy
-
-    NOTE:
-    - START conditions are always generated by the master
-    - bus is considered to be busy after the START condition
-    - see TI SLVA704 fig.5 on p.4 for more details
-    - see NXP UM10204 p.48 and p.50 for timing details
-*/
-/**************************************************************************/
-static bool twi_write_start(void)
-{
-  /* start SCL & SDA routine */
-  SCL_HIGH();                            //becomes INPUT_PULLUP & pulls line high, SCL FIRST DO NOT TOUCH
-  SDA_HIGH();                            //becomes INPUT_PULLUP & pulls line high
-  twi_delay(twi_dcount - 18);            //tSU;STA & tBUF >= 4.7μsec is bus free time between STOP & START condition, measured 5.125μsec
-
-  /* check if SDA line is blocked */
-  if (freeBus() != true) return ~I2C_OK; //dirty hack to release locked SDA line
-
-  /* continue SCL & SDA routine */
-  SDA_LOW();                             //becomes OUTPUT & pulls line LOW
-  twi_delay(twi_dcount - 1);             //tHD;STA >= 4.0μsec is START hold time, measured 4.416μsec 
-  SCL_LOW();
-
-  return I2C_OK;                         //success!!!
+  return I2C_SDA_RELEASED;                                          //SDA released!!!
 }
 
 /**************************************************************************/
@@ -305,6 +243,88 @@ static bool twi_write_stop(void)
   SDA_HIGH();                                 //finish the STOP by releasing SDA line
 
   return I2C_OK;                              //success!!!
+}
+
+/**************************************************************************/
+/*
+    twi_write_start()
+    
+    Sends start pulse & returns false if SCL or SDA is busy
+
+    NOTE:
+    - START conditions are always generated by the master
+    - bus is considered to be busy after the START condition
+    - see TI SLVA704 fig.5 on p.4 for more details
+    - see NXP UM10204 p.48 and p.50 for timing details
+*/
+/**************************************************************************/
+static bool twi_write_start(void)
+{
+  /* start SCL & SDA routine */
+  SCL_HIGH();                         //becomes INPUT_PULLUP & pulls line high, SCL FIRST DO NOT TOUCH
+  SDA_HIGH();                         //becomes INPUT_PULLUP & pulls line high
+  twi_delay(twi_dcount - 18);         //tSU;STA & tBUF >= 4.7μsec is bus free time between STOP & START condition, measured 5.125μsec
+
+  /* check if SDA line is blocked */
+  switch (freeBus())                  //dirty hack to release locked SDA line
+  {
+    case I2C_SDA_RELEASED:
+      twi_write_stop();               //always use stop after start/unfinished read
+
+      SCL_HIGH();                     //becomes INPUT_PULLUP & pulls line high, SCL FIRST DO NOT TOUCH
+      SDA_HIGH();                     //becomes INPUT_PULLUP & pulls line high
+      twi_delay(twi_dcount - 18);     //tSU;STA & tBUF >= 4.7μsec is bus free time between STOP & START condition, measured 5.125μsec
+      break;
+
+    case I2C_SDA_HELD_LOW:
+    case I2C_SCL_HELD_LOW_AFTER_READ:
+      return ~I2C_OK;                 //fail to release locked SDA line or stretch time is too short 
+      break;
+  }
+
+  /* continue SCL & SDA routine */
+  SDA_LOW();                          //becomes OUTPUT & pulls line LOW
+  twi_delay(twi_dcount - 1);          //tHD;STA >= 4.0μsec is START hold time, measured 4.416μsec 
+  SCL_LOW();
+
+  return I2C_OK;                      //success!!!
+}
+
+/**************************************************************************/
+/*
+    twi_init
+
+    Initialisation of software/bit-bang master I2C bus protocol
+
+    NOTE:
+    - normaly I2C bus drivers are "open drain", meaning that they can pull the
+      corresponding signal line low, but cannot drive it high. Thus, there can
+      be no bus contention where one device is trying to drive the line high
+      while another tries to pull it low, eliminating the potential for damage
+      to the drivers or excessive power dissipation in the system. Each signal
+      line has a pull-up resistor on it, to restore the signal to high when no
+      device is asserting it low
+    - however this driver used INPUT_PULLUP, because people forgetting about
+      external pull up resistors, so the code has changed a bit recently.
+      Instead of changing pin output register when banging the bits, we now
+      change pin mode register. The pin is switched between INPUT_PULLUP &
+      OUTPUT modes, which makes it either a weak pull up or a strong pull down
+      (output register has 0 written into it in advance)
+*/
+/**************************************************************************/
+void twi_init(uint8_t sda, uint8_t scl)
+{
+  twi_sda = sda;
+  twi_scl = scl;
+
+  SCL_HIGH();                                          //becomes INPUT_PULLUP & pulls line high
+  SDA_HIGH();                                          //becomes INPUT_PULLUP & pulls line high
+  delay(20);                                           //some slave needs > 15msec to reach the idle state
+
+  twi_setClock(preferred_si2c_clock);                  //~100KHz, by default
+  twi_setClockStretchLimit();                          //set stretch SCL limit, in μsec
+
+  if (freeBus() == I2C_SDA_RELEASED) twi_write_stop(); //dirty hack to release locked SDA line, always use stop after start/unfinished read
 }
 
 /**************************************************************************/
@@ -613,12 +633,14 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *buffer, uint8_t length, bool send
 /*
     twi_status()
 
-    returned code:
-     - I2C_OK                      0, OK
-     - I2C_SDA_HELD_LOW            1, SDA held low by another device, no procedure available to recover
-     - I2C_SDA_HELD_LOW_AFTER_INIT 2, SDA held low beyond slave clock stretch time, increase stretch time
-     - I2C_SCL_HELD_LOW            3, SCL held low by another device, no procedure available to recover
-     - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time, increase stretch time
+
+    NOTE:
+    - returned code:
+        - I2C_OK                      0, OK
+        - I2C_SDA_HELD_LOW            1, SDA held low by another device, no procedure available to recover
+        - I2C_SDA_HELD_LOW_AFTER_INIT 2, SDA held low beyond slave clock stretch time, increase stretch time
+        - I2C_SCL_HELD_LOW            3, SCL held low by another device, no procedure available to recover
+        - I2C_SCL_HELD_LOW_AFTER_READ 4, SCL held low beyond slave clock stretch time, increase stretch time
 */
 /**************************************************************************/
 uint8_t twi_status()
