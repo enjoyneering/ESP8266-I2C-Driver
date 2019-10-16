@@ -41,7 +41,7 @@ extern "C"
 
 #define TWI_I2C_DEFAULT_CLOCK           100000 //default I2C speed, in Hz
 #define TWI_I2C_SCL_STRCH_LIMIT         1250   //maximum SCL stretch time, in μsec
-#define TWI_I2C_SDA_POLLING_LIMIT       32     //number of attempts to release I2C bus if slave blocked SDA low
+#define TWI_I2C_SDA_POLLING_LIMIT       20     //maximum number of SCL pulses to release I2C bus if slave blocked SDA low
 
 #define TWI_I2C_NACK                    HIGH   //1
 #define TWI_I2C_ACK                     LOW    //0
@@ -51,6 +51,9 @@ extern "C"
 #define I2C_SDA_HELD_LOW_AFTER_INIT     2      //SDA held low beyond slave clock stretch time
 #define I2C_SCL_HELD_LOW                3      //SCL held low by another device, no procedure available to recover
 #define I2C_SCL_HELD_LOW_AFTER_READ     4      //SCL held low beyond slave clock stretch time
+
+#define I2C_SDA_OK                      5      //SDA free
+#define I2C_SDA_RELEASED                6      //SDA released after use by another device
 
 
 void    twi_init(uint8_t sda, uint8_t scl);
