@@ -19,6 +19,8 @@ If you want to keep the original files - just change the file extension* to "**t
 
 *if you change the file name you get an error at compile time
 
+Special thanks to Tech-TX(StanJ)
+
 Enjoy.
 
 [license-badge]: https://img.shields.io/badge/License-GPLv3-blue.svg
