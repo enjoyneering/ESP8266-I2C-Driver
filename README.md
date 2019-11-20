@@ -19,7 +19,7 @@ If you want to keep the original files - just change the file extension* to "**t
 
 *_if you change the file name you get an error at compile time_
 
-Special thanks to Tech-TX(StanJ). Enjoy.
+Special thanks to [Tech-TX(StanJ)](https://github.com/Tech-TX). Enjoy.
 
 [license-badge]: https://img.shields.io/badge/License-GPLv3-blue.svg
 [license]:       https://choosealicense.com/licenses/gpl-3.0/
