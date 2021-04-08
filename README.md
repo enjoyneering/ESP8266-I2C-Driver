@@ -11,9 +11,21 @@ Fixed built-in Master I²C driver for Arduino ESP8266 core. Sorry it doesn't sup
 
 **Deprecated. I'm tired of updating files every time after a new version of Arduino ESP8266 is released. New standalone I2C driver is [here](https://github.com/enjoyneering/masterWire).**
 
+### Windows
 Copy and replace "**twi.h**", "**core_esp8266_si2c.cpp**" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.2\cores\esp8266
 
 Copy and replace "**Wire.h**", "**Wire.cpp**" in folder %USERPROFILE%\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.5.2\libraries\Wire
+
+### MacOS
+Copy and replace "**twi.h**", "**core_esp8266_si2c.cpp**" in folder
+```bash
+open ~/Library/Arduino15/packages/esp8266/hardware/esp8266/2.*.*/cores/esp8266
+```
+
+Copy and replace "**Wire.h**", "**Wire.cpp**" in folder
+```bash
+open ~/Library/Arduino15/packages/esp8266/hardware/esp8266/2.*.*/libraries/Wire
+```
 
 If you want to keep the original files - just change the file extension* to "**twi.h.OLD**" and etc. Then you always can go back.
 
